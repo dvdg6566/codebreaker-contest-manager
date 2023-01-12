@@ -1,9 +1,7 @@
 import flask
-from flask import Flask,Blueprint,session,flash,redirect,url_for,render_template,abort, send_from_directory,request,jsonify
-from jinja2 import TemplateNotFound
+from flask import Flask,session,redirect, send_from_directory,request,jsonify
 
 from waitress import serve
-from main.auth_decorator import login_required
 
 import io
 import sys
@@ -12,7 +10,7 @@ from password import FLASK_SECRET_KEY, GOOGLE_CLIENT_SECRET, AWS_COGNITO_USER_PO
 from pytz import utc
 
 from main import submissionview, newuserview, profileview, submissionlistview, contestview, contestlistview, scoreboardview, credits, contestgroupview, editprofileview, problemview, announcelistview, announceview, defaultview, clarificationsview
-from admin import adminview, editproblemlistview, editusersview, editproblemview, editcontestlistview, editcontestview, editannouncelistview, editannounceview, editcontestgroupview, editclarificationsview, viewsubmissions
+from admin import adminview, editproblemlistview, editusersview, editproblemview, editcontestlistview, editcontestview, editannouncelistview, editannounceview, editcontestgroupview, editclarificationsview, viewsubmissions, uploadtestdataview
 import awstools
 from datetime import datetime,timedelta
 
@@ -37,7 +35,8 @@ app.add_url_rule('/admin/editproblems',view_func=editproblemlistview.editproblem
 app.add_url_rule('/admin/editusers',view_func=editusersview.editusers)
 app.add_url_rule('/admin/edituserrole',view_func=editusersview.editUserRole, methods = ['POST'])
 app.add_url_rule('/credits',view_func=credits.credits)
-app.add_url_rule('/admin/editproblem/<problem_id>', view_func = editproblemview.editproblem, methods = ['GET', 'POST'])
+app.add_url_rule('/admin/editproblem/<problemId>', view_func = editproblemview.editproblem, methods = ['GET', 'POST'])
+app.add_url_rule('/admin/uploadtestdata/<problemId>', view_func = uploadtestdataview.uploadtestdata, methods = ['GET'])
 app.add_url_rule('/admin/editcontests',view_func=editcontestlistview.editcontestlist, methods=['GET', 'POST'])
 app.add_url_rule('/admin/editcontest/<contestId>', view_func = editcontestview.editcontest, methods = ['GET', 'POST'])
 app.add_url_rule('/admin/editcontestproblems',view_func=editcontestview.editcontestproblems, methods = ['POST'])

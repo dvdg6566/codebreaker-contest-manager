@@ -4,11 +4,11 @@
 
 {% with messages = get_flashed_messages() %}
   {% if messages %}
-    <ul class=flashes>
-    {% for message in messages %}
-      <li>{{ message }}</li>
-    {% endfor %}
-    </ul>
+	<ul class=flashes>
+	{% for message in messages %}
+	  <li>{{ message }}</li>
+	{% endfor %}
+	</ul>
   {% endif %}
 {% endwith %}
 
@@ -18,19 +18,19 @@
 
 <div class="container">
 	<div class="container">
-        	{% with messages = get_flashed_messages(with_categories=true) %}
-        		{% if messages %}
-                		{% for category, message in messages %}
-                                	<div class="alert alert-{{category}} alert-dismissible fade show mt-4" role="alert">
-                                        	{{message}}
-                                               	<button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                                	<span aria-hidden="true">&times;</span>
-                                                </button>
-                                        </div>
-                                {% endfor %}
-                        {% endif %}
-               	{% endwith %}
-        </div>
+			{% with messages = get_flashed_messages(with_categories=true) %}
+				{% if messages %}
+						{% for category, message in messages %}
+									<div class="alert alert-{{category}} alert-dismissible fade show mt-4" role="alert">
+											{{message}}
+												<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+													<span aria-hidden="true">&times;</span>
+												</button>
+										</div>
+								{% endfor %}
+						{% endif %}
+				{% endwith %}
+		</div>
 	<h6> Editing problem: <b> <a href={{'/problem/' + info['problemName']}}> {{info["problemName"]}} </a> </b> </h6>	
 	<br>
 
@@ -47,15 +47,15 @@
 		<div class="input-group-prepend">
 			<span class="input-group-text">Source</span>
 		</div>
-		      {{form.problem_source(type="text", placeholder="Source", value=info['source'], class="form-control")}}
-                </div>
+			  {{form.problem_source(type="text", placeholder="Source", value=info['source'], class="form-control")}}
+				</div>
 				
 		<div class="input-group mb-3 col">
 		<div class="input-group-prepend">
 			<span class="input-group-text">Problem Author</span>
 		</div>
 			{{form.problem_author(type="text", placeholder="Author", value=info['author'], class="form-control")}}
-                </div>
+				</div>
 		</div>
 
 		<div class="row">
@@ -65,7 +65,7 @@
 		</div>
 			{{form.contest_link(type="text",placeholder="Contest ID (Leave blank if none)", value=info['contestLink'], class="form-control")}}
 		</div>
-	 	
+		
 		<div class="input-group mb-3 col">
 		<div class="input-group-prepend">
 			<span class="input-group-text">Problem Type</span>
@@ -78,19 +78,19 @@
 		<div class="input-group mb-3 col">
 			<div class="input-group-prepend"> <span class="input-group-text">Time Limit (Seconds)</span> </div>
 			{{form.time_limit(type="text", placeholder="1", value=info['timeLimit'], class="form-control")}}
-                </div>
+				</div>
 				
 		<div class="input-group mb-3 col">
 			<div class="input-group-prepend"> <span class="input-group-text">Memory Limit (MB)</span> </div>
 			{{form.memory_limit(type="text", placeholder="1024", value=info['memoryLimit'], class="form-control")}}
-                </div>
+				</div>
 		</div>
 		{%if info['problem_type'] == 'Communication'%}
 		<div class = "row">
 		<div class="input-group mb-3 col">
 			<div class="input-group-prepend"> <span class="input-group-text">First File Name</span> </div>
 			{{form.nameA(type="text", placeholder="a", value=info['nameA'], class="form-control")}}
-                </div>
+				</div>
 				
 		<div class="input-group mb-3 col">
 			<div class="input-group-prepend"> <span class="input-group-text">Second File Name</span> </div>
@@ -98,7 +98,7 @@
 		</div>
 		</div>
 		{%endif%}
-	        	
+				
 		<a class="btn btn-secondary" href='/admin/viewsubmissions/{{info.problemName}}' > View Submissions </a>
 		<br>
 		
@@ -229,23 +229,25 @@
 		<input type="hidden" name="form_name" value="delete_html">
 	</form>
 	<button type="button" onclick="deletePDF()" class="btn btn-secondary mb-2">Delete PDF Statement</button>
-        <form id="delPDF" action="" method="post" class="form-group">
-                <input type="hidden" name="form_name" value="delete_pdf">
-        </form>
+		<form id="delPDF" action="" method="post" class="form-group">
+				<input type="hidden" name="form_name" value="delete_pdf">
+		</form>
 	<br>
 	<br>
 	<hr class="hr-text" data-content="">
 	<br>
 	<h2>Testcases and Subtasks</h2>
-	<button type="button" onclick="syncTestcases()" class="btn btn-secondary mb-2">Sync testcases</button>
-        <form id="syncTC" action="" method="post" class="form-group">
-                <input type="hidden" name="form_name" value="sync_testcases">
-        </form>
+	<!-- <button type="button" onclick="syncTestcases()" class="btn btn-secondary mb-2">Sync testcases</button>
+		<form id="syncTC" action="" method="post" class="form-group">
+				<input type="hidden" name="form_name" value="sync_testcases">
+		</form>
 	<form action="" method="post" class="form-group">
-                <input type="hidden" name="form_name" value="update_count">
-                <input type="submit" value="Update Count" class="btn btn-secondary mb-2">
-        </form>
-	<p>There are {{info['testcaseCount']}} test cases on the judge right now.</p>
+				<input type="hidden" name="form_name" value="update_count">
+				<input type="submit" value="Update Count" class="btn btn-secondary mb-2">
+		</form>
+	<p>There are {{info['testcaseCount']}} test cases on the judge right now.</p> -->
+	<a href = {{ "/admin/uploadtestdata/" + info['problemName'] }} target="_blank"> Upload Testdata </a>
+	<br>
 
 	<form action="" method="post" class="form-group">
 		<input type="hidden" name="form_name" value="add_subtask">
@@ -348,14 +350,14 @@
 	</table>
 
 	<form action="" method="post" class="form-group">
-                <input type="hidden" name="form_name" value="validate">
-                <input type="submit" value="Validate problem" class="btn btn-secondary">
-        </form>
+				<input type="hidden" name="form_name" value="validate">
+				<input type="submit" value="Validate problem" class="btn btn-secondary">
+		</form>
 	<br>
 	<br>
 </div>
 <script>
-        function deleteHTML() {
+		function deleteHTML() {
 		var pathname = window.location.pathname;
 		if (pathname[pathname.length - 1] == '/') pathname = pathname.slice(0, -1);
 		problem_id = pathname.substring(pathname.lastIndexOf('/') + 1);
@@ -366,21 +368,21 @@
 	}
 	function deletePDF() {
 		var pathname = window.location.pathname;
-                if (pathname[pathname.length - 1] == '/') pathname = pathname.slice(0, -1);
-                problem_id = pathname.substring(pathname.lastIndexOf('/') + 1);
-                var del = window.confirm("Are you sure you want to delete the PDF statement?");
-                if (del) {
-                        document.getElementById("delPDF").submit();
-                }
+				if (pathname[pathname.length - 1] == '/') pathname = pathname.slice(0, -1);
+				problem_id = pathname.substring(pathname.lastIndexOf('/') + 1);
+				var del = window.confirm("Are you sure you want to delete the PDF statement?");
+				if (del) {
+						document.getElementById("delPDF").submit();
+				}
 	}
 	function syncTestcases() {
 		var pathname = window.location.pathname;
-                if (pathname[pathname.length - 1] == '/') pathname = pathname.slice(0, -1);
-                problem_id = pathname.substring(pathname.lastIndexOf('/') + 1);
-                var del = window.confirm("Are you sure you want to sync testdata?")
-                if (del) {
-                        document.getElementById("syncTC").submit();
-                }
+				if (pathname[pathname.length - 1] == '/') pathname = pathname.slice(0, -1);
+				problem_id = pathname.substring(pathname.lastIndexOf('/') + 1);
+				var del = window.confirm("Are you sure you want to sync testdata?")
+				if (del) {
+						document.getElementById("syncTC").submit();
+				}
 		
 	}
 </script>
