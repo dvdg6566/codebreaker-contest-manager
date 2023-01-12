@@ -1,0 +1,45 @@
+# Manages DynamoDB Users table
+
+import boto3
+from flask import session
+from awstools import awshelper
+from boto3.dynamodb.conditions import Key
+
+dynamodb = boto3.resource('dynamodb')
+users_table = dynamodb.Table('codebreaker-users')
+
+def getAllUsers():
+    return awshelper.scan(users_table)
+
+def getAllUsernames():
+    return awshelper.scan(users_table,
+        ProjectionExpression = 'username'
+    )
+
+# Get user's information based on username
+# TODO: Remove index and make username the primary key
+def getUserInfo(username):
+    response = users_table.query(
+        IndexName = 'usernameIndex', 
+        KeyConditionExpression=Key('username').eq(username),
+    )
+    items = response['Items']
+    if len(items) != 0: return items[0]
+    return None
+
+# Gets information about the currently logged in user based on 
+def getCurrentUserInfo():
+    if 'username' in dict(session).keys():
+        username =  dict(session)['username']
+        user_info =  getUserInfo(username)
+        return user_info
+    else:
+        return None
+
+# Updates user's info
+def updateUserInfo(email, username, fullname, school, theme, hue, nation):
+    users_table.update_item(
+        Key = {'email' : email},
+        UpdateExpression = f'set username =:u, fullname=:f, school =:s, theme =:t, hue=:h, nation=:n',
+        ExpressionAttributeValues={':u' : username, ':f' : fullname, ':s' : school, ':t' : theme, ':h':hue, ':n': nation}
+    )

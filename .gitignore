@@ -1,0 +1,10 @@
+*.swp
+*.swn
+*.swo
+.DS_Store
+node_modules/
+password.py
+__pycache__/
+main/__pycache__/
+admin/__pycache__/
+homepage.json
