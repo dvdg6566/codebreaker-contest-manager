@@ -53,52 +53,56 @@ application.add_url_rule('/admin/editclarifications', view_func=editclarificatio
 application.add_url_rule('/admin/viewsubmissions/<problemName>', view_func = viewsubmissions.viewsubmissions, methods=['GET','POST'])
 
 ''' BEGIN: AUTHENTICATION WITH AWS COGNITO'''
+
+def updateSession(username):
+	session['username'] = username
+	session.permanent = True
+
 @application.route('/login', methods=['GET','POST'])
 def login():
-    userinfo = awstools.users.getCurrentUserInfo()
+	global session
+	userinfo = awstools.users.getCurrentUserInfo()
 
-    if userinfo != None:
-        return redirect
-    
-    form = LoginForm()
-    
-    if form.is_submitted():
-        result = request.form
-        username = result['username']
-        password = result['password']
+	if userinfo != None:
+		flash ("Aready Logged in!", "warning")
+		return redirect('/')
+	
+	form = LoginForm()
+	
+	if form.is_submitted():
+		result = request.form
+		username = result['username']
+		password = result['password']
 
-        response = awstools.cognito.authenticate(username, password)
-        
-        if response['status'] != 200: # 403 access denied, 400 error
-            flash ('Incorrect password!', 'danger')
-            return redirect('/login')
+		response = awstools.cognito.authenticate(username, password)
+		
+		if response['status'] != 200: # 403 access denied, 400 error
+			flash ('Incorrect password!', 'danger')
+			return redirect('/login')
 
-        flash ('Login Success!', 'success')
-        for key in list(session.keys()):
-            session.pop(key)
+		flash ('Login Success!', 'success')
 
-        session['username'] = username
-        session.permanent = True
-        return redirect('/')
-        
-    return render_template('login.html', form=form, userinfo=userinfo)
+		updateSession(username)
+		return redirect('/')
+		
+	return render_template('login.html', form=form, userinfo=userinfo)
 
 
 @application.route('/logout')
 def logout():
-    for key in list(session.keys()):
-        session.pop(key)
+	for key in list(session.keys()):
+		session.pop(key)
 
-    return redirect('/')
+	return redirect('/')
 
 ''' END AUTHENTICATION '''
 
 ''' BEGIN CPP REFERENCE '''
 def cppref(path):
-    return send_from_directory('static/cppreference/reference/en',path)
+	return send_from_directory('static/cppreference/reference/en',path)
 application.add_url_rule("/cppreference/<path:path>", view_func=cppref)
 def cppref2(path):
-    return send_from_directory('static/cppreference/reference/common',path)
+	return send_from_directory('static/cppreference/reference/common',path)
 application.add_url_rule("/common/<path:path>", view_func=cppref2)
 
 ''' END CPP REFERENCE '''
@@ -106,4 +110,4 @@ application.add_url_rule("/common/<path:path>", view_func=cppref2)
 app = application
 
 if __name__ == '__main__':
-    application.run(debug=True, port=5000)
+	application.run(debug=True, port=5000)
