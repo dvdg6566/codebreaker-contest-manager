@@ -19,7 +19,7 @@ from flask_awscognito import AWSCognitoAuthentication
 # GET ENVIRONMENT VARIABLES
 FLASK_SECRET_KEY = os.environ['FLASK_SECRET_KEY']
 AWS_COGNITO_USER_POOL_CLIENT_SECRET = os.environ['AWS_COGNITO_USER_POOL_CLIENT_SECRET']
-
+os.environ['AWS_DEFAULT_REGION'] = 'ap-southeast-1'
 # END GET ENVIRONMENT VARIABLES
 
 application = Flask(__name__)
