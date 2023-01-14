@@ -1,17 +1,15 @@
 import flask
-from flask import Flask,session,redirect, send_from_directory
+from flask import Flask,session,redirect,send_from_directory,render_template,request,flash
+from forms import LoginForm
 
 from waitress import serve
 
 import io
 import os
 
-from main import submissionview, loginview, profileview, submissionlistview, contestview, contestlistview, scoreboardview, credits, contestgroupview, editprofileview, problemview, announcelistview, announceview, defaultview, clarificationsview, homeview
+from main import submissionview, profileview, submissionlistview, contestview, contestlistview, scoreboardview, credits, contestgroupview, editprofileview, problemview, announcelistview, announceview, defaultview, clarificationsview, homeview
 from admin import adminview, editproblemlistview, editusersview, editproblemview, editcontestlistview, editcontestview, editannouncelistview, editannounceview, editcontestgroupview, editclarificationsview, viewsubmissions, uploadtestdataview
 import awstools
-from datetime import datetime,timedelta
-
-from flask_awscognito import AWSCognitoAuthentication
 
 # GET ENVIRONMENT VARIABLES
 from password import FLASK_SECRET_KEY
@@ -31,7 +29,6 @@ application.add_url_rule('/contest/<contestId>', view_func = contestview.contest
 application.add_url_rule('/contest/<contestId>/scoreboard', view_func = scoreboardview.scoreboard)
 application.add_url_rule('/submissions',view_func = submissionlistview.submissionlist, methods=['GET', 'POST'])
 application.add_url_rule('/profile/<username>', view_func = profileview.profile)
-application.add_url_rule('/login', view_func = loginview.login, methods=['GET','POST'])
 application.add_url_rule('/admin',view_func=adminview.admin)
 application.add_url_rule('/admin/editproblems',view_func=editproblemlistview.editproblemlist, methods = ['GET', 'POST'])
 application.add_url_rule('/admin/editusers',view_func=editusersview.editusers)
@@ -54,6 +51,38 @@ application.add_url_rule('/admin/editgroup/<groupId>', view_func=editcontestgrou
 application.add_url_rule('/clarifications', view_func=clarificationsview.clarifications, methods=['GET','POST'])
 application.add_url_rule('/admin/editclarifications', view_func=editclarificationsview.editclarifications, methods=['GET','POST'])
 application.add_url_rule('/admin/viewsubmissions/<problemName>', view_func = viewsubmissions.viewsubmissions, methods=['GET','POST'])
+
+''' BEGIN: AUTHENTICATION WITH AWS COGNITO'''
+@application.route('/login', methods=['GET','POST'])
+def login():
+    userinfo = awstools.users.getCurrentUserInfo()
+
+    if userinfo != None:
+        return redirect
+    
+    form = LoginForm()
+    
+    if form.is_submitted():
+        result = request.form
+        username = result['username']
+        password = result['password']
+
+        response = awstools.cognito.authenticate(username, password)
+        
+        if response['status'] != 200: # 403 access denied, 400 error
+            flash ('Incorrect password!', 'danger')
+            return redirect('/login')
+
+        flash ('Login Success!', 'success')
+        for key in list(session.keys()):
+            session.pop(key)
+
+        session['username'] = username
+        session.permanent = True
+        return redirect('/')
+        
+    return render_template('login.html', form=form, userinfo=userinfo)
+
 
 @application.route('/logout')
 def logout():
