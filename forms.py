@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, IntegerField, DecimalField, BooleanField, SelectField, SubmitField, TextAreaField, validators
+from wtforms import StringField, IntegerField, DecimalField, BooleanField, SelectField, SubmitField, TextAreaField, PasswordField
 
 class SubmitForm(FlaskForm):
     code = TextAreaField('Code Goes Here')
@@ -14,12 +14,10 @@ class ResubmitForm(FlaskForm):
     codeB = TextAreaField('Code Goes Here')
     submit = SubmitField('Resubmit')
 
-class NewUserForm(FlaskForm):
+class LoginForm(FlaskForm):
     username = StringField('username')
-    name = StringField('name')
-    school = StringField('school')
-    submit = SubmitField('Register')
-    nation = SelectField('nation')
+    password = PasswordField('password')
+    submit = SubmitField('Submit')
 
 class EditProfileForm(FlaskForm):
     name = StringField('name')

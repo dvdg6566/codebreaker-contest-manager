@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %} Welcome! {% endblock %} <!-- Title goes here -->
+{% block head %} {{ super() }} {% endblock %}
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class=flashes>
+    {% for message in messages %}
+      <li>{{ message }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
+{% block content %}
+
+<br>
+
+<div class="container">
+    <h2>Welcome to Codebreaker Contest Manager! Please enter your login details.</h2>
+    
+    <hr>
+    
+    <form id = "newuserform" action = "" method = "post" class="form-group">
+    
+        <label for="username"><b>Username</b> </label>
+        {{form.username(class = "newuserinput", type="text", placeholder="Enter Username", required='required')}}
+
+        <label for="name"><b>Password</b></label>
+        {{form.password(class = "newuserinput", placeholder="Enter Password", required='required')}}
+        
+        <br>
+
+        <hr>
+
+        {{form.submit(type="submit", class="btn btn-primary w-100")}}
+
+    </form>
+</div>
+<br>
+
+{% endblock %}
+
+
