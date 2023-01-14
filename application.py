@@ -19,6 +19,7 @@ application = Flask(__name__)
 
 application.config['SECRET_KEY'] = FLASK_SECRET_KEY
 application.config['MAX_CONTENT_LENGTH'] = 1024 * 1024 * 64
+application.config['SESSION_COOKIE_NAME'] = 'codebreaker-login'
 application.config['SESSION_COOKIE_SECURE'] = True
 
 application.add_url_rule('/', view_func=homeview.home, methods=["GET"])
