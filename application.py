@@ -4,9 +4,9 @@ from flask import Flask,session,redirect, send_from_directory,request,jsonify
 from waitress import serve
 
 import io
+import os
 import sys
 import json
-from password import FLASK_SECRET_KEY, GOOGLE_CLIENT_SECRET, AWS_COGNITO_USER_POOL_CLIENT_SECRET
 from pytz import utc
 
 from main import submissionview, newuserview, profileview, submissionlistview, contestview, contestlistview, scoreboardview, credits, contestgroupview, editprofileview, problemview, announcelistview, announceview, defaultview, clarificationsview
@@ -15,6 +15,12 @@ import awstools
 from datetime import datetime,timedelta
 
 from flask_awscognito import AWSCognitoAuthentication
+
+# GET ENVIRONMENT VARIABLES
+FLASK_SECRET_KEY = os.environ['FLASK_SECRET_KEY']
+AWS_COGNITO_USER_POOL_CLIENT_SECRET = os.environ['AWS_COGNITO_USER_POOL_CLIENT_SECRET']
+
+# END GET ENVIRONMENT VARIABLES
 
 application = Flask(__name__)
 
