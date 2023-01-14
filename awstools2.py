@@ -4,7 +4,6 @@ import subprocess
 import time
 from time import sleep
 import random
-import sendemail
 from pprint import pprint
 from datetime import datetime, timedelta
 from botocore.exceptions import ClientError

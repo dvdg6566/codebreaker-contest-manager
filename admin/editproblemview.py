@@ -1,7 +1,6 @@
 from flask import flash, render_template, session, request, redirect
 from forms import updateProblemForm
 import json
-import tags
 import awstools
 import subprocess
 import compilesub

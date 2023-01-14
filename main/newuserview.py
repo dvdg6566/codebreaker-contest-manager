@@ -1,6 +1,5 @@
 from flask import flash, render_template, session, request, redirect
 import awstools
-import sendemail
 from forms import NewUserForm
 
 def newuser():
