@@ -13,7 +13,6 @@ def getAllAnnounces():
 		ProjectionExpression='announceId, priority, visible, aSummary, aTitle, adminOnly, contestLink'
 	)
 
-
 # Detailed view of announcement
 def getAnnounceWithId(announceId):
 	response=announce_table.query(

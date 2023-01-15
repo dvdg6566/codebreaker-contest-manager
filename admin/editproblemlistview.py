@@ -37,7 +37,7 @@ def editproblemlist():
         if result['problem_id'] in problemNames:
             flash('Problem id already taken', 'warning')
             return redirect('/admin/editproblems')
-        awstools.createProblemWithId(result['problem_id'])
+        awstools.problems.createProblemWithId(result['problem_id'])
         problem_id = result['problem_id']
         return redirect(f'/admin/editproblem/{problem_id}')
 

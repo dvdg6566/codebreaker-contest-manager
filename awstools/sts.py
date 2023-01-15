@@ -7,9 +7,11 @@ from botocore.exceptions import ClientError
 iam_client = boto3.client('iam')
 sts_client = boto3.client('sts')
 
+judgeName = 'codebreaker'
+
 def createRole(problemName):
 
-	roleName = f'codebreaker-testdata-{problemName}-role'
+	roleName = f'{judgeName}-testdata-{problemName}-role'
 
 	policyDocument = {
 		'Version':'2012-10-17', 
@@ -17,7 +19,7 @@ def createRole(problemName):
 			'Sid': 'AllowAllS3ActionsInUserFolder', 
 			'Effect': 'Allow', 
 			'Action': ['s3:*'], 
-			'Resource': [f'arn:aws:s3:::codebreaker-testdata/{problemName}/*'] 
+			'Resource': [f'arn:aws:s3:::{judgeName}-testdata/{problemName}/*'] 
 	   }] 
 	}
 
@@ -28,9 +30,9 @@ def createRole(problemName):
 				"Effect": "Allow",
 				"Principal": {
 					"AWS": [
-						"arn:aws:iam::354145626860:role/ec2main",
-						"arn:aws:iam::354145626860:root"
-					]
+						"arn:aws:iam::{accountId}:role/ec2main",
+						"arn:aws:iam::{accountId}:root"
+					] # Allow 
 				},
 				"Action": "sts:AssumeRole",
 				"Condition": {}

@@ -62,8 +62,9 @@ def batchGetSubmissions(start, end):
 		RequestItems={
 			f'{judgeName}-submissions': {
 				'Keys': submissions,            
-				'ConsistentRead': True
-				#'ProjectionExpression': 'problemName, submissionTime, username'          
+				'ConsistentRead': True,
+				'ProjectionExpression': 'subId, problemName, submissionTime, username, #a, totalScore, maxTime, maxMemory',
+				'ExpressionAttributeNames': {'#a': 'language'}
 			}
 		},
 		ReturnConsumedCapacity='TOTAL'
