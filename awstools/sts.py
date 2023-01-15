@@ -1,5 +1,6 @@
 import boto3
 import json
+from time import sleep
 from uuid import uuid4
 from botocore.exceptions import ClientError
 
@@ -44,6 +45,8 @@ def createRole(problemName):
 			Description = f"Role that grants admins permission to upload testdata to {problemName}",
 			MaxSessionDuration = 3600
 		)
+
+		sleep(5)
 
 		arn = resp['Role']['Arn']
 

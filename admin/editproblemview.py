@@ -24,8 +24,9 @@ def editproblem(problemId):
         return redirect("/")
     
     problem_info = awstools.problems.getProblemInfo(problemId)
-    if (type(problem_info) is str):
-        return 'Sorry, this problem does not exist'
+    if problem_info == None:
+        flash ('Sorry, this problem does not exist', 'warning')
+        return redirect("/admin/editproblems")
 
     if problem_info['problem_type'] == 'Interactive':
         if 'nameA' not in problem_info.keys():
@@ -42,16 +43,6 @@ def editproblem(problemId):
         form.problem_type.choices = ["Communication", "Batch", "Interactive"]
 
     subsURL = f'admin/viewsubmissons/{problemId}'
-
-    if 'tags' not in problem_info.keys():
-        problem_info['tags'] = []
-
-    tagList = []
-    for i in tags.tags():
-        if i in problem_info['tags']:
-            tagList.append([i,True])
-        else:
-            tagList.append([i,False])
 
     if form.is_submitted():
         result = request.form
@@ -142,7 +133,7 @@ def editproblem(problemId):
             return redirect(f'/admin/editproblem/{problemId}')
 
         elif result['form_name'] == 'validate':
-            awstools.problmes.validateProblem(f'{problemId}')
+            awstools.problems.validateProblem(f'{problemId}')
             flash('Validated problem!','success')
             return redirect(f'/admin/editproblem/{problemId}')
 
@@ -379,4 +370,4 @@ def editproblem(problemId):
                 flash('You need admin access to do this', 'warning')
             return redirect(f'/admin/editproblem/{problemId}')
 
-    return render_template('editproblem.html', form=form, info=problem_info, userinfo=userInfo, subsURL=subsURL, tags=tagList)
+    return render_template('editproblem.html', form=form, info=problem_info, userinfo=userInfo, subsURL=subsURL)

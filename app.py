@@ -7,8 +7,8 @@ from waitress import serve
 import io
 import os
 
-from main import submissionview, profileview, submissionlistview, contestview, contestlistview, scoreboardview, credits, contestgroupview, editprofileview, problemview, announcelistview, announceview, defaultview, clarificationsview, homeview
-from admin import adminview, editproblemlistview, editusersview, editproblemview, editcontestlistview, editcontestview, editannouncelistview, editannounceview, editcontestgroupview, editclarificationsview, viewsubmissions, uploadtestdataview
+from main import submissionview, profileview, submissionlistview, contestview, contestlistview, scoreboardview, credits, editprofileview, problemview, announcelistview, announceview, defaultview, clarificationsview, homeview
+from admin import adminview, editproblemlistview, editusersview, editproblemview, editcontestlistview, editcontestview, editannouncelistview, editannounceview, editclarificationsview, uploadtestdataview
 import awstools
 
 # GET ENVIRONMENT VARIABLES
@@ -40,69 +40,64 @@ app.add_url_rule('/admin/uploadtestdata/<problemId>', view_func = uploadtestdata
 app.add_url_rule('/admin/editcontests',view_func=editcontestlistview.editcontestlist, methods=['GET', 'POST'])
 app.add_url_rule('/admin/editcontest/<contestId>', view_func = editcontestview.editcontest, methods = ['GET', 'POST'])
 app.add_url_rule('/admin/editcontestproblems',view_func=editcontestview.editcontestproblems, methods = ['POST'])
-app.add_url_rule('/admin/editcontestgroupcontests',view_func=editcontestgroupview.editcontestgroupcontests, methods = ['POST'])
-app.add_url_rule('/admin/editcontestgroupgroups',view_func=editcontestgroupview.editcontestgroupgroups,methods=['POST'])
-app.add_url_rule('/group/<groupId>', view_func=contestgroupview.contestgroup)
 app.add_url_rule('/editprofile', view_func=editprofileview.editprofile, methods=['GET','POST'])
 app.add_url_rule('/admin/editannouncements', view_func=editannouncelistview.editannouncelist, methods=['GET','POST'])
 app.add_url_rule('/admin/editannouncement/<announceId>', view_func=editannounceview.editannounce, methods=['GET','POST'])
 app.add_url_rule('/announcements', view_func=announcelistview.announcelist)
 app.add_url_rule('/announcement/<announceId>', view_func=announceview.announce)
-app.add_url_rule('/admin/editgroup/<groupId>', view_func=editcontestgroupview.editcontestgroup, methods=['GET','POST'])
 app.add_url_rule('/clarifications', view_func=clarificationsview.clarifications, methods=['GET','POST'])
 app.add_url_rule('/admin/editclarifications', view_func=editclarificationsview.editclarifications, methods=['GET','POST'])
-app.add_url_rule('/admin/viewsubmissions/<problemName>', view_func = viewsubmissions.viewsubmissions, methods=['GET','POST'])
 
 ''' BEGIN: AUTHENTICATION WITH AWS COGNITO'''
-	
+    
 @app.route('/login', methods=['GET','POST'])
 def login():
-	userinfo = awstools.users.getCurrentUserInfo()
+    userinfo = awstools.users.getCurrentUserInfo()
 
-	if userinfo != None:
-		flash ("Aready Logged in!", "warning")
-		return redirect('/')
-	
-	form = LoginForm()
-	
-	if form.is_submitted():
-		result = request.form
-		username = result['username']
-		password = result['password']
+    if userinfo != None:
+        flash ("Aready Logged in!", "warning")
+        return redirect('/')
+    
+    form = LoginForm()
+    
+    if form.is_submitted():
+        result = request.form
+        username = result['username']
+        password = result['password']
 
-		response = awstools.cognito.authenticate(username, password)
-		
-		if response['status'] != 200: # 403 access denied, 400 error
-			flash ('Incorrect password!', 'danger')
-			return redirect('/login')
+        response = awstools.cognito.authenticate(username, password)
+        
+        if response['status'] != 200: # 403 access denied, 400 error
+            flash ('Incorrect password!', 'danger')
+            return redirect('/login')
 
-		flash ('Login Success!', 'success')
+        flash ('Login Success!', 'success')
+        
+        session['username'] = username
+        session.permanent = True
 
-		session['username'] = username
-		session.permanent = True
-
-		return redirect('/')
-		
-	return render_template('login.html', form=form, userinfo=userinfo)
+        return redirect('/')
+        
+    return render_template('login.html', form=form, userinfo=userinfo)
 
 
 @app.route('/logout')
 def logout():
-	for key in list(session.keys()):
-		session.pop(key)
+    for key in list(session.keys()):
+        session.pop(key)
 
-	return redirect('/')
+    return redirect('/')
 
 ''' END AUTHENTICATION '''
 
 ''' BEGIN CPP REFERENCE '''
 def cppref(path):
-	return send_from_directory('static/cppreference/reference/en',path)
+    return send_from_directory('static/cppreference/reference/en',path)
 app.add_url_rule("/cppreference/<path:path>", view_func=cppref)
 def cppref2(path):
-	return send_from_directory('static/cppreference/reference/common',path)
+    return send_from_directory('static/cppreference/reference/common',path)
 app.add_url_rule("/common/<path:path>", view_func=cppref2)
 
 ''' END CPP REFERENCE '''
 if __name__ == '__main__':
-	app.run(debug=True, port=5000)
+    app.run(debug=True, port=5000)
