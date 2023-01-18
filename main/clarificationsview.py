@@ -10,10 +10,12 @@ def clarifications():
         return redirect("/")
     username = userInfo["username"]
 
-    clarifications = awstools.getClarificationsByUser(username)
+    clarifications = awstools.clarifications.getClarificationsByUser(username)
     clarifications.sort(key=lambda x:x['clarificationId'], reverse=True)
 
-    problems = awstools.getAllProblemsHidden()
+    # TODO: ONLY ENABLE CLARIFICATIONS IF CONTEST ONGOING
+
+    problems = awstools.problems.getAllProblemNames()
     names = []
     for i in range(len(problems)):
         if problems[i]['analysisVisible'] and not problems[i]['superhidden']:
@@ -38,7 +40,7 @@ def clarifications():
         if contestmode.contest() and contestmode.contestId() != 'analysismirror' and problemId == "":
             flash("You cannot make general clarifications in contests!", "warning")
             return redirect('./clarifications')
-        awstools.createClarification(username, question, problemId)
+        awstools.clarifications.createClarification(username, question, problemId)
         return redirect('/clarifications')
 
     return render_template('clarifications.html', userinfo = userInfo, form=form, clarifications=clarifications, problem_names = names, contest = contestmode.contest(), users=contestmode.allowedusers(), cppref=contestmode.cppref(), socket=contestmode.socket())

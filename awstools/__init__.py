@@ -8,3 +8,4 @@ from . import problems
 from . import awshelper
 from . import submissions
 from . import announcements
+from . import clarifications
