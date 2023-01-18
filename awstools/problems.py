@@ -2,10 +2,12 @@ import json
 import boto3
 from awstools import awshelper
 from boto3.dynamodb.conditions import Key
+from botocore.exceptions import ClientError
 
 dynamodb = boto3.resource('dynamodb')
 lambda_client = boto3.client('lambda')
 s3 = boto3.client('s3')
+SFclient = boto3.client('stepfunctions')
 
 judgeName = 'codebreaker'
 accountId = '354145626860'
@@ -17,6 +19,7 @@ GRADERS_BUCKET_NAME = f'{judgeName}-graders'
 CHECKERS_BUCKET_NAME = f'{judgeName}-checkers'
 PROBLEM_VERIFICATION_LAMBDA_NAME = f'arn:aws:lambda:{region}:{accountId}:function:{judgeName}-problem-verification'
 REGRADE_PROBLEM_LAMBDA_NAME = f'arn:aws:lambda:{region}:{accountId}:function:{judgeName}-regrade-problem'
+STEP_FUNCTION_ARN = f'arn:aws:states:{region}:{accountId}:stateMachine:Codebreaker-grading-v3'
 
 def getAllProblems():
     results = awshelper.scan(problems_table)
@@ -28,7 +31,7 @@ def getAllProblemNames():
 
 def getAllProblemsLimited():
     return awshelper.scan(problems_table, 
-        ProjectionExpression = 'problemName, analysisVisible, title, #source2, author, problem_type, noACs, validated, superhidden,createdTime,allowAccess',
+        ProjectionExpression = 'problemName, title, #source2, author, problem_type, noACs, validated',
         ExpressionAttributeNames={'#source2':'source'}
     )
 
@@ -49,14 +52,6 @@ def updateProblemInfo(problemName, info):
         ExpressionAttributeNames={'#s':'source'}
     )
 
-def makeAnalysisVisible(problemName):
-    problems_table.update_item(
-        Key = {'problemName' : problemName},
-        UpdateExpression = f'set analysisVisible=:h',
-        ExpressionAttributeValues={':h':1},
-    )
-    setSuperhidden(problemName, False)
-
 def validateProblem(problemId):
     lambda_input = {'problemName':problemId}
     res = lambda_client.invoke(FunctionName = PROBLEM_VERIFICATION_LAMBDA_NAME, InvocationType='RequestResponse', Payload = json.dumps(lambda_input))
@@ -70,7 +65,6 @@ def createProblemWithId(problem_id):
     info['timeLimit'] = 1
     info['memoryLimit'] = 1024
     info['fullFeedback'] = True
-    info['analysisVisible'] = False
     info['customChecker'] = False
     info['attachments'] = False
     info['testcaseCount'] = 0
@@ -120,6 +114,78 @@ def uploadCompiledChecker(sourceName, uploadTarget):
 def uploadGrader(sourceName, uploadTarget):
     s3.upload_fileobj(sourceName, GRADERS_BUCKET_NAME, uploadTarget)
 
+# ADMINS CAN DOWNLOAD TESTDATA IN PROBLEM VIEW PAGE
+def getTestcase(path):
+    tcfile = s3.get_object(Bucket=TESTDATA_BUCKET_NAME, Key=path)
+    body = tcfile['Body'].read().decode("utf-8")
+    return body
+
+# GET ATTACHMENT IN PROBLEM VIEW PAGE
+def getAttachment(path):
+    attachment = s3.get_object(Bucket=ATTACHMENTS_BUCKET_NAME, Key=path)
+    # No need to decode object because attachments are zip files
+    return attachment['Body']
+
+# GENERATES PROBLEM STATEMENT HTML (FOR BOTH PDF AND HTML)
+def getProblemStatementHTML(problemName):
+    statement = ''
+    try:
+        htmlfile = s3.get_object(Bucket=STATEMENTS_BUCKET_NAME, Key=f'{problemName}.html') 
+        body = htmlfile['Body'].read().decode("utf-8") 
+        statement += body
+    except s3.exceptions.NoSuchKey as e:
+        pass
+    try:
+        name = f'{problemName}.pdf'
+        s3.head_object(Bucket=STATEMENTS_BUCKET_NAME, Key=name)
+        if (len(statement) > 0):
+            statement += '<br>'
+        url = s3.generate_presigned_url(
+            ClientMethod='get_object',
+            Params={'Bucket': STATEMENTS_BUCKET_NAME, 'Key': name},
+            ExpiresIn=60)
+
+        statement += '<iframe src=\"' + url + '\" width=\"100%\" height=\"700px\"></iframe>'
+    except ClientError as e:
+        pass
+    if (len(statement) == 0):
+        return {'status': 404, 'response':'No statement is currently available'}
+    else:
+        return {'status': 200, 'response':statement}
+
+''' BEGIN GRADING '''
+
+# Sends submission to be regraded by Step Function
+def gradeSubmission(problemName,submissionId,username,submissionTime=None,regradeall=False,language='cpp',problemType='Batch'):
+    regrade=True
+
+    # If no submission time already recorded, this is a new submission
+    if submissionTime == None:
+        regrade=False
+        submissionTime = (datetime.now()+timedelta(hours=8)).strftime("%Y-%m-%d %X")
+    
+    # Grader required if problem is not batch
+    grader = (problemType != 'Batch')
+
+    # Stitching takes place for all submissions 
+    stitch = 1
+
+    SF_input = {
+        "problemName": problemName,
+        "submissionId":int(submissionId),
+        "username":username,
+        "submissionTime":submissionTime,
+        "stitch":stitch,
+        "regrade":regrade,
+        "regradeall":regradeall,
+        "language":language, 
+        "grader": grader,
+        "problemType": problemType
+    }
+
+    stepFunctionARN = STEP_FUNCTION_ARN
+    res = SFclient.start_execution(stateMachineArn = stepFunctionARN, input = json.dumps(SF_input))
+
 # REGRADE PROBLEM AS INVOKED IN ADMIN PAGE
 # Regrade type can be NORMAL, AC, NONZERO
 def regradeProblem(problemName, regradeType = 'NORMAL'): 
@@ -134,3 +200,5 @@ def regradeProblem(problemName, regradeType = 'NORMAL'):
     }
 
     res = lambda_client.invoke(FunctionName = REGRADE_PROBLEM_LAMBDA_NAME, InvocationType='Event', Payload = json.dumps(lambda_input))    
+
+''' END: GRADING '''

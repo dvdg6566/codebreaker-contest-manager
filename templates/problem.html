@@ -23,21 +23,13 @@
 					<!-- Nav tabs -->
 					<ul class="nav nav-tabs" role="tablist" id="problem-all-tabs">
 						<li class="nav-item">
-							<a class="nav-link {{"active" if compileError == "" else ""}}" data-toggle="tab" href="#statement">Statement</a>
+							<a class="nav-link active data-toggle="tab" href="#statement">Statement</a>
 						</li>
-						{%if probleminfo.problem_type == 'Communication'%}
-						<li class="nav-item">
-							<a class="nav-link" data-toggle="tab" href="#submitCommunication" id="submitlink">Submit Code</a>
-						</li>
-						{%elif probleminfo.problem_type == 'Interactive'%}
-						<li class="nav-item">
-							<a class="nav-link" data-toggle="tab" href="#submitInteractive" id="submitlink">Submit Code</a>
-						</li>
-						{%else %}
+
 						<li class="nav-item">
 							<a class="nav-link" data-toggle="tab" href="#submitCode" id="submitlink">Submit Code</a>
 						</li>
-						{%endif%}
+
 						<li class="nav-item">
 							<a class="nav-link" href="/submissions?problem={{probleminfo.problemName}}&username={{userinfo.username}}">My Submissions</a>
 						</li>
@@ -57,52 +49,14 @@
 					</ul>
 						<!-- Tab panes -->
 						<div class="tab-content" id="problem-tab-content">
-							<div id="statement" class="container tab-pane {{"active" if compileError == "" else "fade"}}"><br>
+							<div id="statement" class="container tab-pane active"><br>
 								<h3> <b> {{probleminfo.title}}</b> </h3>
 								{{statementHTML | safe}}
 							</div>
 
 							<div id="submitCode" class="container tab-pane fade"><br>
 								<h3> <b> Submitting to '{{probleminfo.title}}' </b> </h3> <br>
-								{% if not userinfo %}
-								<p> <a href="/login"> You're not logged in! Click here to login </a> </p>
-								{% elif userinfo.role == 'disabled' or userinfo.role == 'locked'%}
-								<p> Your account is unfortunately disabled :( <br> If you just registered, please wait for an admin to enable your account. <p>
-								{% else %}
-
-								<form autocomplete="off" id = "submitCodeForm" action = "" method = "post" class="form-group">
-									<label for="language">Select Submission Language (Under Construction):</label>
-									{{form.language(type="select",class="form-control")}}
-
-									<p> {{form.code(class = 'form-control', id = 'editor', maxLength = '50')}} </p>
-									{% if probleminfo.problemName != 'helloworld2' %}
-									<p id="submitButtonParagraph">  {{form.submit(class="btn btn-primary", onclick="onSubmit()")}} </p>
-									{% endif %}
-								</form>
-															{% endif %}
-							</div>
-
-							<div id="submitInteractive" class="container tab-pane fade"><br>
-								<h3> <b> Submitting to '{{probleminfo.title}}' </b> </h3> <br>
-								{% if not userinfo %}
-								<p> <a href="/login"> You're not logged in! Click here to login </a> </p>
-								{% elif userinfo.role == 'disabled' or userinfo.role == 'locked'%}
-								<p> Your account is unfortunately disabled :( <br> If you just registered, please wait for an admin to enable your account. <p>
-								{% else %}
-								<form autocomplete="off" id = "submitCodeForm" action = "" method = "post" class="form-group">
-									<p> {{form.code(class = 'form-control', id = 'editorI', maxLength = '50')}} </p>
-									<p id="submitButtonParagraph">  {{form.submit(class="btn btn-primary", onclick="onSubmit()")}} </p>
-								</form>
-															{% endif %}
-							</div>
-
-							<div id='submitCommunication' class="container tab-pane fade"><br>
-								<h3> <b> Submitting {{probleminfo.nameB}}.cpp to '{{probleminfo.title}}' </b> </h3> <br>
-								{% if not userinfo %}
-								<p> <a href="/login"> You're not logged in! Click here to login </a> </p>
-								{% elif userinfo.role == 'disabled' or userinfo.role == 'locked'%}
-								<p> Your account is unfortunately disabled :( <br> If you just registered, please wait for an admin to enable your account. <p>
-								{% else %}
+								{%if probleminfo.problem_type == 'Communication' %}
 								<form autocomplete="off" id = "submitCommunicationForm" action = "" method = "post" class="form-group">
 									<p> {{probleminfo.nameA}}.cpp </p>
 									<p> {{form.codeA(class = 'form-control', id = 'editorA', maxLength = '50')}} </p>
@@ -110,9 +64,19 @@
 									<p> {{form.codeB(class = 'form-control', id = 'editorB', maxLength = '50')}} </p>
 									<p id="submitFilesForm">  {{form.submit(class="btn btn-primary", onclick="onSubmit()")}} </p>
 								</form>
-															{% endif %}
-							</div>
-					
+								{%else%}
+								<form autocomplete="off" id = "submitCodeForm" action = "" method = "post" class="form-group">
+									{%if probleminfo.problem_type == 'Batch'%}
+									<label for="language">Select Submission Language</label>
+									{{form.language(type="select",class="form-control")}}
+									<br>
+									{%endif%}
+
+									<p> {{form.code(class = 'form-control', id = 'editor', maxLength = '50')}} </p>
+									<p id="submitButtonParagraph">  {{form.submit(class="btn btn-primary", onclick="onSubmit()")}} </p>
+								</form>
+								{%endif%}
+							</div>				
 						</div>
 					</div>
 			</div>
@@ -126,37 +90,13 @@
 							<b> Time Limit: </b> {{probleminfo.timeLimit}} Seconds <br>
 							<b> Memory Limit: </b> {{probleminfo.memoryLimit}}MB <br>
 							<b> Your best score: </b>
-														{% if probleminfo.problemName in userinfo.problemScores %}
-																{{userinfo.problemScores[probleminfo.problemName]}}
-														{% else %}
-																0
-														{% endif %}
-														<br>
-							<b> Source: </b>
-							{% if probleminfo.author != [""]%}
-								{% if probleminfo.contestLink != "" %}
-								<a href="/contest/{{probleminfo.contestLink}}">{{probleminfo.source}}</a> {{" "}} ({% for author in probleminfo.author %}<a href="/profile/{{author}}"}>{{author}}</a>{{", " if loop.index != probleminfo.author|length}}{% endfor %})
-								{%else%}
-								{{probleminfo.source + " "}} ({% for author in probleminfo.author %}<a href="/profile/{{author}}"}>{{author}}</a>{{", " if loop.index != probleminfo.author|length}}{% endfor %})
-								{%endif%}
-							{%else%}
-								{% if probleminfo.contestLink != "" %}
-								<a href="/contest/{{probleminfo.contestLink}}">{{probleminfo.source}}</a>
-								{%else%}
-								{{probleminfo.source}}
-								{%endif%}
-							{%endif%}
-							{% if editorials|length != 0 and probleminfo.editorialVisible %}
-								<br>
-								<b>Editorial: </b>
-								{% for i in range(editorials|length) %}
-									<a href = {{editorials[i]}}>{{i+1}}</a>
-								{%endfor%}
-							{%endif%}
-							{% if contest and remsubs != -1%}
-								<br>
-								<b> Remaining Submissions: </b> {{remsubs}}
+							{% if probleminfo.problemName in userinfo.problemScores %}
+									{{userinfo.problemScores[probleminfo.problemName]}}
+							{% else %}
+									0
 							{% endif %}
+							<br>
+							<b> Remaining Submissions: </b> {{remsubs}}
 						</div>
 					</div>
 					
@@ -238,7 +178,10 @@
 			$('#submitFilesForm').children().prop('disabled', false);
 		});
 
-		var editorNames = ['editorA', 'editorB', 'editorI', 'editor']
+		var editorNames = ['editor']
+		if ( {{ probleminfo.problem_type | tojson }} === 'Communication' ){
+			editorNames = ['editorA', 'editorB']
+		}
 		var editors = []
 		for (let i = 0; i < editorNames.length; i += 1){
 			var editor = CodeMirror.fromTextArea(document.getElementById(editorNames[i]), {
@@ -276,6 +219,3 @@
 		document.getElementById("submitlink").onclick = refresh;
 	</script>
 {% endblock %}
-		
-
-
