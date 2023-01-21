@@ -17,7 +17,7 @@ def getAllUsernames():
     )
 
 # Get user's information based on username
-# TODO: Remove index and make username the primary key
+# TODO: Gets the contest info too and returns in as part of object
 def getUserInfo(username):
     response = users_table.query(
         KeyConditionExpression=Key('username').eq(username)
@@ -54,3 +54,9 @@ def updateUserInfo(email, username, fullname, school, theme, hue, nation):
         UpdateExpression = f'set username =:u, fullname=:f, school =:s, theme =:t, hue=:h, nation=:n',
         ExpressionAttributeValues={':u' : username, ':f' : fullname, ':s' : school, ':t' : theme, ':h':hue, ':n': nation}
     )
+
+def judgeAccess(userInfo):
+    if userInfo['role'] == 'admin':
+        return True
+    # Checks if contest window is ongoing for user and returns true if so
+    return False

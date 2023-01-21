@@ -7,7 +7,7 @@ from waitress import serve
 import io
 import os
 
-from main import submissionview, profileview, submissionlistview, contestview, contestlistview, scoreboardview, credits, editprofileview, problemview, announcelistview, announceview, defaultview, clarificationsview, homeview
+from main import submissionview, profileview, submissionlistview, contestview, contestlistview, scoreboardview, credits, problemview, announcelistview, announceview, defaultview, clarificationsview, homeview
 from admin import adminview, editproblemlistview, editusersview, editproblemview, editcontestlistview, editcontestview, editannouncelistview, editannounceview, editclarificationsview, uploadtestdataview
 import awstools
 
@@ -39,7 +39,6 @@ app.add_url_rule('/admin/uploadtestdata/<problemId>', view_func = uploadtestdata
 app.add_url_rule('/admin/editcontests',view_func=editcontestlistview.editcontestlist, methods=['GET', 'POST'])
 app.add_url_rule('/admin/editcontest/<contestId>', view_func = editcontestview.editcontest, methods = ['GET', 'POST'])
 app.add_url_rule('/admin/editcontestproblems',view_func=editcontestview.editcontestproblems, methods = ['POST'])
-app.add_url_rule('/editprofile', view_func=editprofileview.editprofile, methods=['GET','POST'])
 app.add_url_rule('/admin/editannouncements', view_func=editannouncelistview.editannouncelist, methods=['GET','POST'])
 app.add_url_rule('/admin/editannouncement/<announceId>', view_func=editannounceview.editannounce, methods=['GET','POST'])
 app.add_url_rule('/announcements', view_func=announcelistview.announcelist)

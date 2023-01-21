@@ -4,7 +4,6 @@ import time
 import random
 
 import awstools
-import awstools2
 from compilesub import check
 from forms import ResubmitForm
 
@@ -12,28 +11,36 @@ from forms import ResubmitForm
 
 def submission(subId):
 	userInfo = awstools.users.getCurrentUserInfo()
+	if not awstools.users.judgeAccess(userInfo):
+		return redirect('/')
+
 	if not subId.isdigit():
-		return "Sorry, the submission you're looking for doesn't exist"
+		flash("Sorry, the submission you're looking for doesn't exist", "warning")
+		return redirect('/')
 
 	subDetails = awstools.submissions.getSubmission(int(subId))
 	if subDetails == None:
-		return "Sorry, the submission you're looking for doesn't exist. Refresh the page if you just made a submission." 
+		flash ("Sorry, the submission you're looking for doesn't exist. Refresh the page if you just made a submission.")
+		return redirect('/')
+
+	if userInfo['role'] != 'admin' and userInfo['username'] != subDetails['username']:
+		flash ("You do not have access to this resource!", "warning")
+		return redirect('/')
 
 	# Format and round floats
-	def fixFloat(x):
+	def formatFloat(x):
 		x = round(x,2)
-		if x == round(x):
-			x = round(x)
+		if x == round(x): return round(x)
 		return x
 
-	subtaskScores = [fixFloat(i) for i in subDetails['subtaskScores']]
-	scores = [fixFloat(i) for i in subDetails["score"]]
+	subtaskScores = [formatFloat(i) for i in subDetails['subtaskScores']]
+	scores = [formatFloat(i) for i in subDetails["score"]]
 	language = subDetails['language']
 
 	problemName = subDetails['problemName']
 	username = subDetails['username']
-	problem_info = awstools2.getProblemInfo(problemName)
-	if type(problem_info) == str:
+	problemInfo = awstools.problems.getProblemInfo(problemName)
+	if type(problemInfo) == str:
 		return "Sorry, this problem doesn't exist"
 	totalScore = 0
 	verdicts = subDetails['verdicts']
@@ -63,18 +70,14 @@ def submission(subId):
 		subDetails['maxTime'] = f'{subDetails["maxTime"]} seconds'
 		subDetails['maxMemory'] = f'{subDetails["maxMemory"]} MB'
 
-	if problem_info['problem_type'] == 'Communication' and code != None:
+	if problemInfo['problem_type'] == 'Communication' and code != None:
 		flash('This submission was made before the problem type was converted to communication', 'warning')
-	
-	if not awstools2.isAllowedAccess(problem_info,userInfo):
-		flash("Sorry, you are not authorized to view this resource!", 'warning')
-		return redirect("/")
 
-	subtaskMaxScores = problem_info['subtaskScores']
+	subtaskMaxScores = problemInfo['subtaskScores']
 	subtaskNumber = len(subtaskMaxScores)
-	subtaskDependency = problem_info['subtaskDependency']
-	testcaseNumber = problem_info['testcaseCount']
-	fullFeedback = problem_info['fullFeedback']
+	subtaskDependency = problemInfo['subtaskDependency']
+	testcaseNumber = problemInfo['testcaseCount']
+	fullFeedback = problemInfo['fullFeedback']
 
 	toRefresh = False
 	subtaskDetails = []
@@ -149,14 +152,11 @@ def submission(subId):
 	if form.is_submitted():
 
 		result = request.form
-		''' REGRADE '''
 		if 'form_name' in result and result['form_name'] == 'regrade':
-			if userInfo == None or (userInfo['role'] != 'admin' and userInfo['role'] != 'superadmin'):
+			''' REGRADE: ONLY ADMIN CAN REGRADE'''
+			if userInfo != None and userInfo['role'] != 'admin':
 				flash('You do not have permission to regrade!','warning')
 				return redirect(f'/problem/{problemName}')
-			if contest and (userInfo['role'] != 'superadmin' and userInfo['username'] not in contestmode.allowedusers()):
-				flash('You cannot regrade in contest mode!', 'warning')
-				return redirect(f'/submission/{subId}')
 
 			# For regrade, the code is already there so we just call grade 
 			awstools.submissions.gradeSubmission(
@@ -166,15 +166,15 @@ def submission(subId):
 				submissionTime = subDetails['submissionTime'],
 				regradeall=False,
 				language = language,
-				problemType = problem_info['problem_type']
+				problemType = problemInfo['problem_type']
 			)
 
-			time.sleep(1)
+			time.sleep(2)
 			return redirect(f"/submission/{subId}")
 		
-		else:
+		elif 'form_name' in result and result['form_name'] == 'resubmit':
 			''' RESUBMIT '''
-			if userInfo == None or (userInfo['role'] not in ['member','admin']):
+			if userInfo == None:
 				flash('You do not have permission to submit!','warning')
 				return redirect(f'/problem/{problemName}')
 			
@@ -184,53 +184,18 @@ def submission(subId):
 			codeA = None
 			codeB = None
 
-			if 'code' in result:
-				code = result['code']
+			if not problem_info['validated']:
+				flash("Sorry, this problem is still incomplete.", "warning")
+				return redirect(f'/problem/{problemName}')
 
-				checkResult = check(code, problem_info,userInfo)
-				if checkResult["status"] != "success":
-					status = checkResult["status"]
-					message = checkResult["message"]
-					flash(message, status)
-	
-					if status == "danger":
-						return redirect(f"/submission/{subId}")
-					
-					if status == "warning":
-						return redirect("/")
+			if max(len(code), len(codeA), len(codeB)) > 128000:
+				flash("Sorry, your code is too long.", "warning")
+				return redirect(f'/problem/{problemName}')
 
-			else:
-				codeA = result['codeA']
-				codeB = result['codeB']
-
-				checkResult = check(codeA, problem_info,userInfo)
-				if checkResult["status"] != "success":
-					status = checkResult["status"]
-					message = checkResult["message"]
-					flash(message, status)
-	
-					if status == "danger":
-						return redirect(f"/submission/{subId}")
-					
-					if status == "warning":
-						return redirect("/")
-
-				checkResult = check(codeB, problem_info,userInfo)
-				if checkResult["status"] != "success":
-					status = checkResult["status"]
-					message = checkResult["message"]
-					flash(message, status)
-	
-					if status == "danger":
-						return redirect(f"/submission/{subId}")
-					
-					if status == "warning":
-						return redirect("/")
-			
 			# Assign new submission index
 			newSubId = awstools.submissions.getNextSubmissionId()
 
-			if problem_info['problem_type'] == 'Communication':
+			if problemInfo['problem_type'] == 'Communication':
 				# Upload code file to S3
 				s3pathA = f'source/{newSubId}A.{language}'
 				s3pathB = f'source/{newSubId}B.{language}'
@@ -248,16 +213,18 @@ def submission(subId):
 				submissionTime = None,
 				regradeall=False,
 				language = language,
-				problemType = problem_info['problem_type']
+				problemType = problemInfo['problem_type']
 			)
 
-			time.sleep(3)
+			time.sleep(2)
+			return redirect(f"/submission/{newSubId}")
+
+		else:
+			flash("An error has occured", "danger")
 			return redirect(f"/submission/{newSubId}")
 
 	'''END RESUBMISSION'''
 
-	return render_template('submission.html', message="",subDetails=subDetails,probleminfo=problem_info, userinfo=userInfo,toRefresh=toRefresh,form=form,code=code,codeA=codeA,codeB=codeB,subtaskDetails=subtaskDetails)
+	return render_template('submission.html', message="",subDetails=subDetails,probleminfo=problemInfo, userinfo=userInfo,toRefresh=toRefresh,form=form,code=code,codeA=codeA,codeB=codeB,subtaskDetails=subtaskDetails)
 
 #END: SUBMISSION -----------------------------------------------------------------------------------------------------------------------------------------------------
-
-
