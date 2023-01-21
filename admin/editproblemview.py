@@ -42,48 +42,25 @@ def editproblem(problemId):
     else:
         form.problem_type.choices = ["Communication", "Batch", "Interactive"]
 
-    subsURL = f'admin/viewsubmissons/{problemId}'
-
     if form.is_submitted():
         result = request.form
         files = request.files
 
         if result['form_name'] == 'problem_info':
             info = {}
-            info['fullFeedback'] = ('feedback' in result)
-            info['analysisVisible'] = ('analysis' in result)
-            info['superhidden'] = problem_info['superhidden']
-            if (userInfo['role'] == 'superadmin'):
-                info['superhidden'] = ('superhidden' in result)
-            if(info['superhidden']):
-                info['analysisVisible'] = False
-            info['customChecker'] = ('checker' in result)
-            info['attachments'] = ('attachments' in result)
             info['title'] = result['problem_title']
-            info['source'] = result['problem_source']
+            info['problem_type'] = result['problem_type']
+            info['timeLimit'] = result['time_limit']
+            info['memoryLimit'] = result['memory_limit']
+            info['attachments'] = ('attachments' in result)
+            info['customChecker'] = ('checker' in result)
+            info['fullFeedback'] = ('feedback' in result)
+
             if 'nameA' in result.keys():
                 info['nameA'] = result['nameA']
             if 'nameB' in result.keys():
                 info['nameB'] = result['nameB']
 
-            if result['problem_author'] != "":
-                authors = result['problem_author'].split(",")
-                for author in authors:
-                    author = author.replace(" ","")
-                    user = awstools.users.getUserInfo(author)
-                    if user == None:
-                        flash(f"User {author} not found!", "warning")
-                        return redirect(f'/admin/editproblem/{problemId}')
-            info['author'] = result['problem_author']
-            info['problem_type'] = result['problem_type']
-            info['timeLimit'] = result['time_limit']
-            info['EE'] = ('ee' in result)
-            info['editorialVisible'] = ('editorial_visible' in result)
-            info['memoryLimit'] = result['memory_limit']
-            info['createdTime'] = problem_info['createdTime']
-            info['editorials'] = problem_info['editorials']
-            info['contestUsers'] = problem_info['contestUsers']
-            
             awstools.problems.updateProblemInfo(problemId, info)
             if problem_info['problem_type'] == 'Communication':
                 awstools.problems.updateCommunicationFileNames(problemId,info)
@@ -119,16 +96,6 @@ def editproblem(problemId):
         elif result['form_name'] == 'delete_pdf':
             awstools.problems.deleteStatement(f'{problemId}.pdf')
             flash('PDF statement deleted!', 'success')
-            awstools.problems.validateProblem(f'{problemId}')
-            return redirect(f'/admin/editproblem/{problemId}')
-
-        elif result['form_name'] == 'sync_testcases':
-            awstools.problems.testcaseUploadLambda(f'{problemId}')
-            return redirect(f'/admin/editproblem/{problemId}')
-       
-        elif result['form_name'] == 'update_count':
-            awstools.problems.updateTestcaseCount(f'{problemId}')
-            flash('Updated number of testcases!', 'success')
             awstools.problems.validateProblem(f'{problemId}')
             return redirect(f'/admin/editproblem/{problemId}')
 
@@ -182,33 +149,8 @@ def editproblem(problemId):
             awstools.problems.validateProblem(f'{problemId}')
             return redirect(f'/admin/editproblem/{problemId}')
 
-        elif result['form_name'] == 'add_editorial':
-            problem_info['editorials'].append("")
-            info = {}
-            info['editorials'] = problem_info['editorials']
-            awstools.problems.updateEditorialInfo(problemId, info)
-            return redirect(f'/admin/editproblem/{problemId}')
-
-        elif result['form_name'] == 'remove_editorial':
-            if (len(problem_info['editorials']) != 0):
-                problem_info['editorials'].pop()
-            info = {}
-            info['editorials'] = problem_info['editorials']
-            awstools.problems.updateEditorialInfo(problemId, info)
-            return redirect(f'/admin/editproblem/{problemId}')
-        
-        elif result['form_name'] == 'update_editorials':
-            info = {}
-            info['editorials'] = []
-            i = 0
-            while ('e_' + str(i)) in result:
-                link = result['e_' + str(i)]
-                info['editorials'].append(link)
-                i += 1
-            awstools.problems.updateEditorialInfo(problemId, info)
-            return redirect(f'/admin/editproblem/{problemId}')
-
         elif result['form_name'] == 'checker_upload':
+            # Compiling C++ custom checker
             if 'checker' not in files:
                 flash('Statement not found', 'warning')
                 return redirect(f'/admin/editproblem/{problemId}')
@@ -240,15 +182,15 @@ def editproblem(problemId):
                 subprocess.run(f"rm {sourceName}", shell=True)
                 subprocess.run(f"rm {compiledName}", shell=True)
                 
-                # Compile checker
                 flash('Uploaded!', 'success')
                 awstools.problems.validateProblem(f'{problemId}')
                 return redirect(f'/admin/editproblem/{problemId}')
             else:
-                flash('Compile Error', 'warning')
+                flash('Invalid language', 'warning')
                 return redirect(f'/admin/editproblem/{problemId}')
 
         elif result['form_name'] == 'grader_upload':
+            # grader.cpp file for interactive/communication problems
             if 'grader' not in files:
                 flash('Grader not found', 'warning')
                 return redirect(f'/admin/editproblem/{problemId}')
@@ -270,6 +212,7 @@ def editproblem(problemId):
                 return redirect(f'/admin/editproblem/{problemId}')
 
         elif result['form_name'] == 'fileB_upload':
+            # .h file for communication problems
             if 'fileB' not in files:
                 flash('Header not found', 'warning')
                 return redirect(f'/admin/editproblem/{problemId}')
@@ -292,6 +235,7 @@ def editproblem(problemId):
                 return redirect(f'/admin/editproblem/{problemId}')
 
         elif result['form_name'] == 'fileA_upload':
+            # .h file for communication problems
             if 'fileA' not in files:
                 flash('Header not found', 'warning')
                 return redirect(f'/admin/editproblem/{problemId}')
@@ -314,6 +258,7 @@ def editproblem(problemId):
                 return redirect(f'/admin/editproblem/{problemId}')
 
         elif result['form_name'] == 'header_upload':
+            # Header upload for interactive or communication problems
             if 'header' not in files:
                 flash('Header not found', 'warning')
                 return redirect(f'/admin/editproblem/{problemId}')
@@ -363,11 +308,15 @@ def editproblem(problemId):
             if result['form_name'] == 'regrade_nonzero': regradeType = 'NONZERO'
             if result['form_name'] == 'regrade_acs': regradeType = 'AC'
 
-            if userInfo['role'] in ['admin','superadmin']:
+            if userInfo['role'] == 'admin':
                 awstools.problems.regradeProblem(problemName=problemId, regradeType=regradeType)
                 flash('Regrade request sent to server!', 'success')
             else: 
                 flash('You need admin access to do this', 'warning')
             return redirect(f'/admin/editproblem/{problemId}')
 
-    return render_template('editproblem.html', form=form, info=problem_info, userinfo=userInfo, subsURL=subsURL)
+        else:
+            flash ("An error has occured", "warning")
+            return redirect(f'/admin/editproblem/{problemId}')
+
+    return render_template('editproblem.html', form=form, info=problem_info, userinfo=userInfo)

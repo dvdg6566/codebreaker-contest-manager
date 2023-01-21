@@ -9,7 +9,7 @@ lambda_client = boto3.client('lambda')
 s3 = boto3.client('s3')
 SFclient = boto3.client('stepfunctions')
 
-judgeName = 'codebreaker'
+judgeName = 'codebreakercontest'
 accountId = '354145626860'
 region = 'ap-southeast-1'
 
@@ -36,7 +36,7 @@ def getAllProblemsLimited():
     )
 
 def getProblemInfo(problemName):
-    response= problems_table.query(
+    response = problems_table.query(
         KeyConditionExpression = Key('problemName').eq(problemName)
     )
     problem_info=response['Items']
@@ -47,9 +47,8 @@ def getProblemInfo(problemName):
 def updateProblemInfo(problemName, info): 
     problems_table.update_item(
         Key = {'problemName' : problemName},
-        UpdateExpression = f'set title=:a, #s=:b, author=:c, problem_type=:d, timeLimit=:e, memoryLimit=:f, fullFeedback=:g, customChecker=:h, attachments=:i',
-        ExpressionAttributeValues={':a':info['title'], ':b':info['source'], ':c':info['author'], ':d':info['problem_type'], ':e':info['timeLimit'], ':f':info['memoryLimit'], ':g':info['fullFeedback'], ':h':info['customChecker'], ':i':info['attachments']},
-        ExpressionAttributeNames={'#s':'source'}
+        UpdateExpression = f'set title=:a, problem_type=:d, timeLimit=:e, memoryLimit=:f, attachments=:i,  customChecker=:h, fullFeedback=:g',
+        ExpressionAttributeValues={':a':info['title'], ':b':info['problem_type'], ':c':info['timeLimit'], ':d':info['memoryLimit'], ':e':info['attachments'], ':f':info['customChecker'], ':g':info['fullFeedback']},
     )
 
 def validateProblem(problemId):
@@ -59,21 +58,17 @@ def validateProblem(problemId):
 def createProblemWithId(problem_id):
     info = {}
     info['title'] = problem_id
-    info['source'] = 'Unknown Source'
-    info['author'] = ''
     info['problem_type'] = 'Batch'
     info['timeLimit'] = 1
     info['memoryLimit'] = 1024
-    info['fullFeedback'] = True
-    info['customChecker'] = False
     info['attachments'] = False
+    info['customChecker'] = False
+    info['fullFeedback'] = True
     info['testcaseCount'] = 0
     updateProblemInfo(problem_id, info)
     subtasks = {}
-    subtasks['subtaskScores'] = []
-    subtasks['subtaskDependency'] = []
-    subtasks['subtaskScores'].append(100)
-    subtasks['subtaskDependency'].append('1')
+    subtasks['subtaskScores'] = [100]
+    subtasks['subtaskDependency'] = ['1']
     updateSubtaskInfo(problem_id, subtasks)
     validateProblem(problem_id)
 

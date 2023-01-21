@@ -28,7 +28,6 @@ def scan(table, ProjectionExpression=None, ExpressionAttributeNames = None, Expr
                 ExclusiveStartKey = resp['LastEvaluatedKey']
             )
             results = results + resp['Items']
-
     elif ExpressionAttributeNames != None:
         resp = table.scan(
             ProjectionExpression=ProjectionExpression,
