@@ -1,9 +1,10 @@
 # Codebreaker Contest Manager
 
-Codebreaker Contest Manager is a fully open-source fork of the Codebreaker Online Judge Project for the hosting and execution of contests.  
+Codebreaker Contest Manager is a fully automated deployment of the Codebreaker Online Judge architecture for the planning and running of contests.  
 
 Key Features:
-- Complete automated deployment that does not require any AWS, Cloud or terminal configuration. This allows an independent instance to be created for a contest, maintaining the principle of least privillege. 
+- Based on Infrastructure As a Code (IAAC) and Continuous Deployment (CD) technologies, which allow automated deployment into independent AWS accounts to maintain least-privillege of testdata and resources.
+   - Deployment does not require execution of any scripts, SSH or AWS configuration. 
 - Completely serverless compilation, grading and databases to allow for infinite scalability
 - Back-end that automatically syncs with Codebreaker Online Judge allowing for easy transfer of problems onto analysis mode.
 
