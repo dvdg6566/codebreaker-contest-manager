@@ -43,28 +43,6 @@
 		</div>
 			{{form.problem_title(type="text", placeholder="Title", value=info['title'], class="form-control")}}
 		</div>
-		<div class="input-group mb-3 col">
-		<div class="input-group-prepend">
-			<span class="input-group-text">Source</span>
-		</div>
-			  {{form.problem_source(type="text", placeholder="Source", value=info['source'], class="form-control")}}
-				</div>
-				
-		<div class="input-group mb-3 col">
-		<div class="input-group-prepend">
-			<span class="input-group-text">Problem Author</span>
-		</div>
-			{{form.problem_author(type="text", placeholder="Author", value=info['author'], class="form-control")}}
-				</div>
-		</div>
-
-		<div class="row">
-		<div class="input-group mb-3 col">
-		<div class="input-group-prepend">
-			<span class="input-group-text">Contest ID</span>
-		</div>
-			{{form.contest_link(type="text",placeholder="Contest ID (Leave blank if none)", value=info['contestLink'], class="form-control")}}
-		</div>
 		
 		<div class="input-group mb-3 col">
 		<div class="input-group-prepend">
@@ -85,6 +63,8 @@
 			{{form.memory_limit(type="text", placeholder="1024", value=info['memoryLimit'], class="form-control")}}
 				</div>
 		</div>
+
+		<!-- COMMUNICATION PROBLEMS HAVE TO SPECIFY NAME OF BOTH -->
 		{%if info['problem_type'] == 'Communication'%}
 		<div class = "row">
 		<div class="input-group mb-3 col">
@@ -98,57 +78,29 @@
 		</div>
 		</div>
 		{%endif%}
-				
-		<a class="btn btn-secondary" href='/admin/viewsubmissions/{{info.problemName}}' > View Submissions </a>
+		<!-- Options for full feedback, checker and attachments-->
+		{{form.feedback(type="checkbox", checked=(info['fullFeedback']))}} Full Feedback
 		<br>
-		
-		{{form.feedback(type="checkbox", checked=(info['fullFeedback'] == 1))}}
-		Full Feedback
-		
+		{{form.checker(type="checkbox", checked=(info['customChecker']))}} Checker
 		<br>
-		
-		{{form.analysis(type="checkbox", checked=(info['analysisVisible'] == 1))}}
-		Analysis Mode
-
-		<br>
-
-		{{form.editorial_visible(type="checkbox", checked=(info['editorialVisible'] == 1))}}
-		Visible Editorials
-
-		<br>
-	
-		{% if userinfo['role'] == 'superadmin' %}
-		
-		{{form.superhidden(type="checkbox", checked=(info['superhidden'] == 1))}}
-		Super Hidden (Only open to superadmin)
-
-		<br>
-		{% endif %}
-
-		{{form.checker(type="checkbox", checked=(info['customChecker'] == 1))}}
-		Checker
-
-		<br>
-		
-		{{form.attachments(type="checkbox",checked=(info['attachments']==1))}}
-		Attachments
-
-		<br>
-		Note: if you turn analysis mode off, it will be turned on again if the problem is part of a contest and someone accessed the contest.
+		{{form.attachments(type="checkbox",checked=(info['attachments']))}} Attachments
 		<br>
 		<br>
 
+		<!-- Update button -->
 		<input type="hidden" name="form_name" value="problem_info">
 		{{form.submit(type="submit", class="btn btn-secondary")}}
 	</form>
+
 	<a class="btn btn-secondary" href="/admin/viewsubmissions/{{info.problemName}}">View Submissions</a>
 	<br>
+
 	<br>
 	<hr class="hr-text" data-content="">
-	<br>
 	<div>
 
 	<br>
+	<!-- Uploading statement -->
 	<h2>Statements and Other Attachments</h2>
 	<form action="" method="post" class="form-group" enctype="multipart/form-data">
 		Upload statement(html/pdf):
@@ -158,6 +110,7 @@
 	</form>
 	<br>
 	<br>
+	<!-- Uploading and compiling checkers -->
 	{% if info['customChecker'] == 1 %}
 	<form action="" method="post" class="form-group" enctype="multipart/form-data">
 		Upload checker(cpp):
@@ -168,6 +121,7 @@
 	<br>
 	<br>
 	{%endif%}
+	<!-- Uploading .h file and grader file -->
 	{% if info['problem_type'] == 'Interactive' %}
 	<form action="" method="post" class="form-group" enctype="multipart/form-data">
 		Upload grader(cpp):
@@ -185,6 +139,7 @@
 	</form>
 	<br>
 	<br>
+	<!-- Uploading 2 .h files and grader file -->
 	{%elif info['problem_type'] == 'Communication' %}
 	<form action="" method="post" class="form-group" enctype="multipart/form-data">
 		Upload grader(cpp):
@@ -213,6 +168,7 @@
 
 	{%endif%}
 	
+	<!-- Uploading Attachments -->
 	{% if info['attachments'] == 1 %}
 	<form action="" method="post" class="form-group" enctype="multipart/form-data">
 		Upload Attachments (zip):
@@ -223,32 +179,27 @@
 	<br>
 	<br>
 	{%endif%}
-
-	<button type="button" onclick="deleteHTML()" class="btn btn-secondary mb-2">Delete HTML Statement</button>
-	<form id="delHTML" action="" method="post" class="form-group">
+  
+  <!-- Deletion of statements -->
+	<form action="" method="post" class="form-group" onsubmit="return confirm('Are you sure you want to delete the HTML Statement?');">
 		<input type="hidden" name="form_name" value="delete_html">
+		<input type="submit" value = "Delete HTML Statement" class="btn btn-secondary mb-2">
 	</form>
-	<button type="button" onclick="deletePDF()" class="btn btn-secondary mb-2">Delete PDF Statement</button>
-		<form id="delPDF" action="" method="post" class="form-group">
-				<input type="hidden" name="form_name" value="delete_pdf">
-		</form>
+	<form action="" method="post" class="form-group" onsubmit="return confirm('Are you sure you want to delete the PDF Statement?');">
+		<input type="hidden" name="form_name" value="delete_pdf">
+		<input type="submit" value = "Delete PDF Statement" class="btn btn-secondary mb-2">
+	</form>
+
 	<br>
 	<br>
 	<hr class="hr-text" data-content="">
 	<br>
 	<h2>Testcases and Subtasks</h2>
-	<!-- <button type="button" onclick="syncTestcases()" class="btn btn-secondary mb-2">Sync testcases</button>
-		<form id="syncTC" action="" method="post" class="form-group">
-				<input type="hidden" name="form_name" value="sync_testcases">
-		</form>
-	<form action="" method="post" class="form-group">
-				<input type="hidden" name="form_name" value="update_count">
-				<input type="submit" value="Update Count" class="btn btn-secondary mb-2">
-		</form>
-	<p>There are {{info['testcaseCount']}} test cases on the judge right now.</p> -->
-	<a href = {{ "/admin/uploadtestdata/" + info['problemName'] }} target="_blank"> Upload Testdata </a>
+
+	<a class="btn btn-secondary" href = {{ "/admin/uploadtestdata/" + info['problemName'] }} target="_blank"> Upload Testdata </a>
 	<br>
 
+	<br>
 	<form action="" method="post" class="form-group">
 		<input type="hidden" name="form_name" value="add_subtask">
 		<input type="submit" value="Add Subtask" class="btn btn-secondary mb-2">
@@ -270,41 +221,12 @@
 		<input type="submit" value="Update Subtask Info" class="btn btn-secondary">
 	</form>
 	<br>
-	<br>
-
-	<hr class="hr-text" data-content="">
-	<br>
-	<h2>Editorial</h2>
-
-	<form action="" method="post" class="form-group">
-		<input type="hidden" name="form_name" value="add_editorial">
-		<input type="submit" value="Add Editorial" class="btn btn-secondary mb-2">
-	</form>
 	
-	{% if info['editorials']|length != 0 %}
-		<form action="" method="post" class="form-group">
-			<input type="hidden" name="form_name" value="remove_editorial">
-			<input type="submit" value="Remove Editorial" class="btn btn-secondary mb-2">
-		</form>
-		<br>
-		<form action="" method="post" class="form-group">
-		{% for editorial in info['editorials']:  %}
-			<input type="text" size="63" placeholder="Link" name={{'e_' + loop.index0|string}} value={{editorial}}>
-			<br>
-		{% endfor %}
-		<input type="hidden" name="form_name" value="update_editorials">
-		<br>
-		<input type="submit" value="Update Editorials" class="btn btn-secondary">
-		</form>
-	{%endif%}
-
-	<br>
 	<br>
 	<hr class="hr-text" data-content="">
 	<br>
-	<h2>Regrade (WARNING: DO NOT INCUR UNNECESSARY COST)</h2>
+	<h2>Regrade</h2>
 
-	{% if userinfo['role'] in ['admin', 'superadmin'] %}
 	<form action="" method="post" class="form-group" onSubmit="return confirm('Are you sure you want to regrade?');">
 		<input type="hidden" name="form_name" value="regrade_problem">
 		<input type="submit" value="Regrade Submissions" class="btn btn-secondary navbar mb-2">
@@ -320,12 +242,13 @@
 	<br>
 	<hr class="hr-text" data-content="">
 	<br>
-	{% endif %}
+
+	<!-- Validation: Status of problem for various categories to ensure all files have been uploaded -->
 	<h2>Validation</h2>
-	{% if info.validated == 1 %}
-	<p> Problem has been validated! </p>
+	{% if info.validated %}
+	<h6> Problem has been validated! </h6>
 	{%else%}
-	<p> Problem has not been validated! </p>
+	<h6> Problem has not been validated! </h6>
 	{%endif%}
 
 	<table class="table table-hover">
@@ -356,34 +279,4 @@
 	<br>
 	<br>
 </div>
-<script>
-		function deleteHTML() {
-		var pathname = window.location.pathname;
-		if (pathname[pathname.length - 1] == '/') pathname = pathname.slice(0, -1);
-		problem_id = pathname.substring(pathname.lastIndexOf('/') + 1);
-		var del = window.confirm("Are you sure you want to delete the HTML statement?");
-		if (del) {
-			document.getElementById("delHTML").submit();
-		}
-	}
-	function deletePDF() {
-		var pathname = window.location.pathname;
-				if (pathname[pathname.length - 1] == '/') pathname = pathname.slice(0, -1);
-				problem_id = pathname.substring(pathname.lastIndexOf('/') + 1);
-				var del = window.confirm("Are you sure you want to delete the PDF statement?");
-				if (del) {
-						document.getElementById("delPDF").submit();
-				}
-	}
-	function syncTestcases() {
-		var pathname = window.location.pathname;
-				if (pathname[pathname.length - 1] == '/') pathname = pathname.slice(0, -1);
-				problem_id = pathname.substring(pathname.lastIndexOf('/') + 1);
-				var del = window.confirm("Are you sure you want to sync testdata?")
-				if (del) {
-						document.getElementById("syncTC").submit();
-				}
-		
-	}
-</script>
 {% endblock %}

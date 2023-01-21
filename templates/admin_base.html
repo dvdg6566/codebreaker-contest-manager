@@ -23,39 +23,7 @@
 		<script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.4/Chart.min.js'></script>
 		<link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.css" rel="stylesheet">
 		<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.js"></script>
-		
-		{%if userinfo.theme != 'light'%}
-		<link href="/static/css/themes/{{userinfo.theme}}.css" rel="stylesheet">
-		{%endif%}
-		{%if 'custom' in userinfo.theme %}
-			<script>document.querySelector(':root').style.setProperty('--hue',{{userinfo.hue}})</script>
-		{%endif%}
-		{% if socket %}
-		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.8/socket.io.min.js"></script>
-		<script type="text/javascript">
-			var socket=io.connect('https://' + window.location.host);
-			$(document).ready(function(){
-				socket.emit('online', {'username':'{{userinfo.username}}','role':'{{userinfo.role}}'});
-				socket.on('message',function(msg){
-					if(msg=='newclarification'){
-						var badge=document.getElementById('clarification_badge');
-						if(badge!=null){
-							badge.hidden=false;
-							alert("New clarification!");
-						}
-					}
-					else{
-						var badge=document.getElementById('home_badge');
-						if(badge!=null){
-							badge.hidden=false;
-							if(msg.includes("announce")){alert("New announcement!");}
-							else{alert("Your clarification has been answered!");}
-						}
-					}
-				});
-			});
-		</script>
-		{% endif %}
+		<link href="/static/css/theme.css" rel="stylesheet">
 	{% endblock %}
 </head>
 	<body>
@@ -69,18 +37,18 @@
 					<a class="nav-link" href="/admin/editannouncements">Announcements</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" href="/admin/editproblems">Problems</a>
+					<a class="nav-link" href="/admin/editusers">Users</a>
 				</li>
 				<li class="nav-item">
 					<a class="nav-link" href="/admin/editcontests">Contests</a>
 				</li>
 				<li class="nav-item">
+					<a class="nav-link" href="/admin/editproblems">Problems</a>
+				</li>
+				<li class="nav-item">
 					<a class="nav-link" href="/admin/editclarifications">Clarifications
 						<span id="clarification_badge" class="badge badge-secondary badge-danger" hidden="true">!</span>
 					</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link" href="/admin/editusers">Users</a>
 				</li>
 				<li class="nav-item">
 					<a class="nav-link" href="/">Home
