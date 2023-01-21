@@ -73,6 +73,7 @@ def login():
 
         flash ('Login Success!', 'success')
         
+        print(session)
         session['username'] = username
         session.permanent = True
 

@@ -11,11 +11,10 @@ dynamodb = boto3.resource('dynamodb')
 lambda_client = boto3.client('lambda')
 SFclient = boto3.client('stepfunctions')
 
-judgeName = 'codebreaker'
+judgeName = 'codebreakercontest'
 counters_table = dynamodb.Table(f'{judgeName}-global-counters')
 submissions_table = dynamodb.Table(f'{judgeName}-submissions')
 SUBMISSIONS_BUCKET_NAME = f'{judgeName}-submissions'
-SUBMISSION_NUMBER_BUCKET_NAME = f'{judgeName}-submission-number'
 subPerPage = 25
 
 # Submission View page: Gets all details to do with submission 

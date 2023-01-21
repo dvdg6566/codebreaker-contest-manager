@@ -7,7 +7,7 @@ from botocore.exceptions import ClientError
 iam_client = boto3.client('iam')
 sts_client = boto3.client('sts')
 
-judgeName = 'codebreaker'
+judgeName = 'codebreakercontest'
 
 def createRole(problemName):
 

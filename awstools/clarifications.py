@@ -3,7 +3,7 @@ from boto3.dynamodb.conditions import Key
 
 dynamodb = boto3.resource('dynamodb')
 
-judgeName = 'codebreaker'
+judgeName = 'codebreakercontest'
 clarifications_table = dynamodb.Table(f'{judgeName}-clarifications')
 
 def createClarification(username, question, problemId):

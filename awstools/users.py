@@ -6,7 +6,7 @@ from awstools import awshelper
 from boto3.dynamodb.conditions import Key
 
 dynamodb = boto3.resource('dynamodb')
-users_table = dynamodb.Table('codebreaker-users')
+users_table = dynamodb.Table('codebreakercontest-users')
 
 def getAllUsers():
     return awshelper.scan(users_table)
@@ -20,8 +20,7 @@ def getAllUsernames():
 # TODO: Remove index and make username the primary key
 def getUserInfo(username):
     response = users_table.query(
-        IndexName = 'usernameIndex', 
-        KeyConditionExpression=Key('username').eq(username),
+        KeyConditionExpression=Key('username').eq(username)
     )
     items = response['Items']
     if len(items) != 0: return items[0]
@@ -35,6 +34,18 @@ def getCurrentUserInfo():
         return user_info
     else:
         return None
+
+def createUser(username, email, role='member', fullname=''):
+    newUserInfo = {
+        'email' : email,
+        'role' : role,
+        'username' : username,
+        'fullname': fullname,
+        'problemScores' : {},
+        'contest': ''
+    }
+    users_table.put_item(Item = newUserInfo)
+    return getUserInfo(email)
 
 # Updates user's info
 def updateUserInfo(email, username, fullname, school, theme, hue, nation):

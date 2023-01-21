@@ -4,7 +4,7 @@ from boto3.dynamodb.conditions import Key
 
 dynamodb = boto3.resource('dynamodb')
 
-judgeName = 'codebreaker'
+judgeName = 'codebreakercontest'
 announce_table = dynamodb.Table(f'{judgeName}-announcements')
 
 # Gets all announcements for homepage

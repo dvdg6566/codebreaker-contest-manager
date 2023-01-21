@@ -9,7 +9,7 @@ lambda_client = boto3.client('lambda')
 s3 = boto3.client('s3')
 SFclient = boto3.client('stepfunctions')
 
-judgeName = 'codebreaker'
+judgeName = 'codebreakercontest'
 accountId = '354145626860'
 region = 'ap-southeast-1'
 
