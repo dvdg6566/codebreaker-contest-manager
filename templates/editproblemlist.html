@@ -4,11 +4,11 @@
 
 {% with messages = get_flashed_messages() %}
   {% if messages %}
-    <ul class=flashes>
-    {% for message in messages %}
-      <li>{{ message }}</li>
-    {% endfor %}
-    </ul>
+	<ul class=flashes>
+	{% for message in messages %}
+	  <li>{{ message }}</li>
+	{% endfor %}
+	</ul>
   {% endif %}
 {% endwith %}
 
@@ -18,19 +18,19 @@
 
 <div class="container">
 	<div class="container">
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                                {% for category, message in messages %}
-                                        <div class="alert alert-{{category}} alert-dismissible fade show mt-4" role="alert">
-                                                {{message}}
-                                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                                        <span aria-hidden="true">&times;</span>
-                                                </button>
-                                        </div>
-                                {% endfor %}
-                        {% endif %}
-                {% endwith %}
-        </div>
+				{% with messages = get_flashed_messages(with_categories=true) %}
+						{% if messages %}
+								{% for category, message in messages %}
+										<div class="alert alert-{{category}} alert-dismissible fade show mt-4" role="alert">
+												{{message}}
+												<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+														<span aria-hidden="true">&times;</span>
+												</button>
+										</div>
+								{% endfor %}
+						{% endif %}
+				{% endwith %}
+		</div>
 	<h1> Edit Problems </h1>	
 	<br>
 	<form action="" method="post" class="form-group" id="addproblemform">
@@ -50,10 +50,8 @@
 			<tr>
 				<th scope="col" data-type="string">Problem ID</th>
 				<th scope="col" data-type="int">Your Score</th>
-				<th scope="col" data-type="string">Source</th>
 				<th scope="col" data-type="string">Validated</th>
 				<th scope="col" data-type="string">Problem Type</th>
-				<th scope="col" data-type="string">Analysis Mode</th>
 			</tr>
 			</thead>
 			
@@ -69,22 +67,6 @@
 					<b> <a href="/admin/editproblem/{{info.problemName}}" class="pl-2">{{info.problemName}}</a> </b>
 				</td>
 					<td>{{info.yourScore}}</td>
-					<td>
-						{% if info.author != [""]%}
-							{% if info.contestLink != "" %}
-							<a href="/contest/{{info.contestLink}}">{{info.source}}</a> {{" "}} ({% for author in info.author %}<a href="/profile/{{author}}"}>{{author}}</a>{{", " if loop.index != info.author|length}}{% endfor %})
-							{%else%}
-							{{info.source + " "}} ({% for author in info.author %}<a href="/profile/{{author}}"}>{{author}}</a>{{", " if loop.index != info.author|length}}{% endfor %})
-							{%endif%}
-						{%else%}
-							{% if info.contestLink != "" %}
-							<a href="/contest/{{info.contestLink}}">{{info.source}}</a>
-							{%else%}
-							{{info.source}}
-							{%endif%}
-						{%endif%}
-					</td>
-
 					{%if info.validated %}
 					<td> <h6 style="margin: 0px">
 					<span style = "width: 36px" class="pb-1 text-white badge badge-success">Ok
@@ -97,10 +79,6 @@
 					</td>
 					{%endif%}
 					<td>{{info.problem_type}}</td>
-
-					<td>
-						{{ "visible" if info.analysisVisible == 1 else "hidden" }}
-					</td>
 				</tr>
 			{% endfor %}
 		</tbody>
@@ -115,29 +93,29 @@
   table = document.getElementById("myTable");
   tr = table.getElementsByTagName("tr");
   for (i = 1; i < tr.length; i++) {
-    ok = 0;
-    ok2 = 1
-    for (j=0;j<6;j++){
-      td = tr[i].getElementsByTagName("td")[j];
-      console.log(td);
-      if (td) {
-        txtValue = td.textContent || td.innerText;
-        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+	ok = 0;
+	ok2 = 1
+	for (j=0;j<6;j++){
+	  td = tr[i].getElementsByTagName("td")[j];
+	  console.log(td);
+	  if (td) {
+		txtValue = td.textContent || td.innerText;
+		if (txtValue.toUpperCase().indexOf(filter) > -1) {
 	  ok = 1;
 	}
 	if(j == 5 && hideACs){ //somehow column 0 is yourscore
 	  txtValue = td.textContent || td.innerText;
 	  if(txtValue.indexOf("visible") > -1){
-	     ok2 = 0;
+		 ok2 = 0;
 	  }
 	}
-      }
-    }
-    if(!ok || !ok2){
+	  }
+	}
+	if(!ok || !ok2){
 	tr[i].style.display="none";
-    }else{
+	}else{
 	tr[i].style.display="";
-    }
+	}
   }
 }
 	function toggleAC(){
@@ -162,72 +140,72 @@ let cur = -1;
 
 // Loop over the headers
 [].forEach.call(headers, function(header, index) {
-    header.addEventListener("click", function() {
-        // This function will sort the column
-        sortColumn(index);
-    });
+	header.addEventListener("click", function() {
+		// This function will sort the column
+		sortColumn(index);
+	});
 });
 
 // Helper function for sorting rows
 // Transform the content of given cell in given column
 const transform = function(index, content) {
-    // Get the data type of column
-    const type = headers[index].getAttribute('data-type');
-    switch (type) {        
+	// Get the data type of column
+	const type = headers[index].getAttribute('data-type');
+	switch (type) {        
 	case 'score':
-            // To account for the N/A possbility as a result in score
-            if (content.trim() == "N/A") return 1;
-            else return - parseInt(content.trim())
-        case 'int':
-            // For integer parameters, it is to be reversed
-            return - parseInt(content.trim());
-        case 'string':
-            // Ignore case when sorting and whitespace
-            return content.toLowerCase().trim();
-        default:
-            return content;
-    }
+			// To account for the N/A possbility as a result in score
+			if (content.trim() == "N/A") return 1;
+			else return - parseInt(content.trim())
+		case 'int':
+			// For integer parameters, it is to be reversed
+			return - parseInt(content.trim());
+		case 'string':
+			// Ignore case when sorting and whitespace
+			return content.toLowerCase().trim();
+		default:
+			return content;
+	}
 }
 
 const sortColumn = function(index) {
-    const invert = (index === cur);
-    cur = (invert ? -1 : index);
-    // Get the table
-    const tableBody = table.querySelector('tbody');
-    const rows = tableBody.querySelectorAll('tr');
+	const invert = (index === cur);
+	cur = (invert ? -1 : index);
+	// Get the table
+	const tableBody = table.querySelector('tbody');
+	const rows = tableBody.querySelectorAll('tr');
 
-    // Clone the rows
-    const newRows = Array.from(rows);
+	// Clone the rows
+	const newRows = Array.from(rows);
 
-    // Sort rows by the content of cells
-    newRows.sort(function(rowA, rowB) {
-        if (invert) [rowA, rowB]=[rowB, rowA];
-        // Get the content of cells
-        const cellA = rowA.querySelectorAll('td')[index];
-        const cellB = rowB.querySelectorAll('td')[index];
+	// Sort rows by the content of cells
+	newRows.sort(function(rowA, rowB) {
+		if (invert) [rowA, rowB]=[rowB, rowA];
+		// Get the content of cells
+		const cellA = rowA.querySelectorAll('td')[index];
+		const cellB = rowB.querySelectorAll('td')[index];
 
-        const a = transform(index, cellA.textContent || cellA.innerText);
-        const b = transform(index, cellB.textContent || cellB.innerText);
+		const a = transform(index, cellA.textContent || cellA.innerText);
+		const b = transform(index, cellB.textContent || cellB.innerText);
  
-        switch (true) {
-            case a > b: return 1;
-            case a < b: return -1;
-            case a == b: return 0;
-        }
-    });
+		switch (true) {
+			case a > b: return 1;
+			case a < b: return -1;
+			case a == b: return 0;
+		}
+	});
 
-    // Remove old rows
-    [].forEach.call(rows, function(row) {
-        tableBody.removeChild(row);
-    });
+	// Remove old rows
+	[].forEach.call(rows, function(row) {
+		tableBody.removeChild(row);
+	});
 
-    // Append new row
-    newRows.forEach(function(newRow) {
-        tableBody.appendChild(newRow);
-    });
+	// Append new row
+	newRows.forEach(function(newRow) {
+		tableBody.appendChild(newRow);
+	});
 }
 
-        </script>
+		</script>
 </div>
 {% endblock %}
 

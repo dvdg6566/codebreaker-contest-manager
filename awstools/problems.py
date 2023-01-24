@@ -17,7 +17,7 @@ problems_table = dynamodb.Table(f'{judgeName}-problems')
 STATEMENTS_BUCKET_NAME = f'{judgeName}-statements'
 GRADERS_BUCKET_NAME = f'{judgeName}-graders'
 CHECKERS_BUCKET_NAME = f'{judgeName}-checkers'
-PROBLEM_VERIFICATION_LAMBDA_NAME = f'arn:aws:lambda:{region}:{accountId}:function:{judgeName}-problem-verification'
+PROBLEM_VALIDATION_LAMBDA_NAME = f'arn:aws:lambda:{region}:{accountId}:function:{judgeName}-problem-validation'
 REGRADE_PROBLEM_LAMBDA_NAME = f'arn:aws:lambda:{region}:{accountId}:function:{judgeName}-regrade-problem'
 STEP_FUNCTION_ARN = f'arn:aws:states:{region}:{accountId}:stateMachine:Codebreaker-grading-v3'
 
@@ -31,7 +31,7 @@ def getAllProblemNames():
 
 def getAllProblemsLimited():
     return awshelper.scan(problems_table, 
-        ProjectionExpression = 'problemName, title, #source2, author, problem_type, noACs, validated',
+        ProjectionExpression = 'problemName, title, #source2, problem_type, noACs, validated',
         ExpressionAttributeNames={'#source2':'source'}
     )
 
@@ -47,13 +47,14 @@ def getProblemInfo(problemName):
 def updateProblemInfo(problemName, info): 
     problems_table.update_item(
         Key = {'problemName' : problemName},
-        UpdateExpression = f'set title=:a, problem_type=:d, timeLimit=:e, memoryLimit=:f, attachments=:i,  customChecker=:h, fullFeedback=:g',
+        UpdateExpression = f'set title=:a, problem_type=:b, timeLimit=:c, memoryLimit=:d, attachments=:e, customChecker=:f, fullFeedback=:g',
         ExpressionAttributeValues={':a':info['title'], ':b':info['problem_type'], ':c':info['timeLimit'], ':d':info['memoryLimit'], ':e':info['attachments'], ':f':info['customChecker'], ':g':info['fullFeedback']},
     )
 
 def validateProblem(problemId):
     lambda_input = {'problemName':problemId}
-    res = lambda_client.invoke(FunctionName = PROBLEM_VERIFICATION_LAMBDA_NAME, InvocationType='RequestResponse', Payload = json.dumps(lambda_input))
+    res = lambda_client.invoke(FunctionName = PROBLEM_VALIDATION_LAMBDA_NAME, InvocationType='RequestResponse', Payload = json.dumps(lambda_input))
+    return res
 
 def createProblemWithId(problem_id):
     info = {}

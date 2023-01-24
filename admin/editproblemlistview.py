@@ -16,7 +16,7 @@ def editproblemlist():
     problemScores = {}
     if userInfo != None:
         problemScores = userInfo['problemScores']
-    problemInfo = [dict((key,value) for key, value in P.items() if key in ['problemName', 'title', 'source', 'author','problem_type','superhidden','analysisVisible','validated','contestLink','allowAccess']) for P in problems] #impt info goes into the list (key in [list])
+    problemInfo = [dict((key,value) for key, value in P.items() if key in ['problemName', 'title', 'source','problem_type','validated']) for P in problems] #impt info goes into the list (key in [list])
 
     for i in range(len(problemInfo)):
         name = problemInfo[i]['problemName']
@@ -25,9 +25,6 @@ def editproblemlist():
             score = problemScores[name]
 
         problemInfo[i]['yourScore'] = score
-
-        authors = problemInfo[i]["author"]
-        problemInfo[i]["author"] = [x.replace(" ", "") for x in authors.split(",")]
     
     if form.is_submitted():
         result = request.form

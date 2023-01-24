@@ -23,21 +23,21 @@ def editproblem(problemId):
         flash("Admin access is required", "warning")
         return redirect("/")
     
-    problem_info = awstools.problems.getProblemInfo(problemId)
-    if problem_info == None:
+    problemInfo = awstools.problems.getProblemInfo(problemId)
+    if problemInfo == None:
         flash ('Sorry, this problem does not exist', 'warning')
         return redirect("/admin/editproblems")
 
-    if problem_info['problem_type'] == 'Interactive':
-        if 'nameA' not in problem_info.keys():
-            problem_info['nameA'] = 'placeholderA'
-        if 'nameB' not in problem_info.keys():
-            problem_info['nameB'] = 'placeholderA'
+    if problemInfo['problem_type'] == 'Interactive':
+        if 'nameA' not in problemInfo.keys():
+            problemInfo['nameA'] = 'placeholderA'
+        if 'nameB' not in problemInfo.keys():
+            problemInfo['nameB'] = 'placeholderA'
 
     form = updateProblemForm()
-    if problem_info['problem_type'] == 'Interactive':
+    if problemInfo['problem_type'] == 'Interactive':
         form.problem_type.choices = ["Interactive", "Batch", "Communication"]
-    elif problem_info['problem_type'] == 'Batch':
+    elif problemInfo['problem_type'] == 'Batch':
         form.problem_type.choices = ["Batch", "Communcation", "Interactive"]
     else:
         form.problem_type.choices = ["Communication", "Batch", "Interactive"]
@@ -62,7 +62,7 @@ def editproblem(problemId):
                 info['nameB'] = result['nameB']
 
             awstools.problems.updateProblemInfo(problemId, info)
-            if problem_info['problem_type'] == 'Communication':
+            if problemInfo['problem_type'] == 'Communication':
                 awstools.problems.updateCommunicationFileNames(problemId,info)
             return redirect(f'/admin/editproblem/{problemId}')
         
@@ -105,23 +105,23 @@ def editproblem(problemId):
             return redirect(f'/admin/editproblem/{problemId}')
 
         elif result['form_name'] == 'add_subtask':
-            problem_info['subtaskScores'].append(0)
-            problem_info['subtaskDependency'].append('1')
+            problemInfo['subtaskScores'].append(0)
+            problemInfo['subtaskDependency'].append('1')
             info = {}
-            info['subtaskScores'] = problem_info['subtaskScores']
-            info['subtaskDependency'] = problem_info['subtaskDependency']
+            info['subtaskScores'] = problemInfo['subtaskScores']
+            info['subtaskDependency'] = problemInfo['subtaskDependency']
             awstools.problems.updateSubtaskInfo(problemId, info)
             return redirect(f'/admin/editproblem/{problemId}')
 
         elif result['form_name'] == 'remove_subtask':
-            if len(problem_info['subtaskScores']) == 1:
+            if len(problemInfo['subtaskScores']) == 1:
                 flash('hisssss! cannot have less than one subtask', 'warning')
                 return redirect(f'/admin/editproblem/{problemId}')
-            problem_info['subtaskScores'].pop()
-            problem_info['subtaskDependency'].pop()
+            problemInfo['subtaskScores'].pop()
+            problemInfo['subtaskDependency'].pop()
             info = {}
-            info['subtaskScores'] = problem_info['subtaskScores']
-            info['subtaskDependency'] = problem_info['subtaskDependency']
+            info['subtaskScores'] = problemInfo['subtaskScores']
+            info['subtaskDependency'] = problemInfo['subtaskDependency']
             awstools.problems.updateSubtaskInfo(problemId, info)
             return redirect(f'/admin/editproblem/{problemId}')
 
@@ -225,7 +225,7 @@ def editproblem(problemId):
                 return redirect(f'/admin/editproblem/{problemId}')
             ext_file = file_name.rsplit('.', 1)[1].lower()
             if ext_file == 'h':
-                name = problem_info['nameB']
+                name = problemInfo['nameB']
                 awstools.problems.uploadGrader(files['fileB'], f'{problemId}/{name}.h')
                 flash('Uploaded!', 'success')
                 awstools.problems.validateProblem(f'{problemId}')
@@ -248,7 +248,7 @@ def editproblem(problemId):
                 return redirect(f'/admin/editproblem/{problemId}')
             ext_file = file_name.rsplit('.', 1)[1].lower()
             if ext_file == 'h':
-                name = problem_info['nameA']
+                name = problemInfo['nameA']
                 awstools.problems.uploadGrader(files['fileA'], f'{problemId}/{name}.h')
                 flash('Uploaded!', 'success')
                 awstools.problems.validateProblem(f'{problemId}')
@@ -319,4 +319,5 @@ def editproblem(problemId):
             flash ("An error has occured", "warning")
             return redirect(f'/admin/editproblem/{problemId}')
 
-    return render_template('editproblem.html', form=form, info=problem_info, userinfo=userInfo)
+    print(problemInfo)
+    return render_template('editproblem.html', form=form, info=problemInfo, userinfo=userInfo)
