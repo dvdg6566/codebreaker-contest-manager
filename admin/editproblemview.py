@@ -19,7 +19,8 @@ def verifyDependency(dependency):
 
 def editproblem(problemId):
     userInfo = awstools.users.getCurrentUserInfo()
-    if userInfo == None or userInfo['role'] != 'admin':
+    if userInfo == None: return redirect("/login")
+    if userInfo['role'] != 'admin':
         flash("Admin access is required", "warning")
         return redirect("/")
     

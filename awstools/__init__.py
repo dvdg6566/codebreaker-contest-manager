@@ -4,6 +4,7 @@
 from . import sts
 from . import users
 from . import cognito
+from . import contests
 from . import problems
 from . import awshelper
 from . import submissions
