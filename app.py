@@ -7,16 +7,17 @@ from waitress import serve
 import io
 import os
 
+# Loads environment variables using dotenv
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
+
 from main import submissionview, profileview, submissionlistview, contestview, contestlistview, scoreboardview, credits, problemview, announcelistview, announceview, defaultview, clarificationsview, homeview
 from admin import adminview, editproblemlistview, editusersview, editproblemview, editcontestlistview, editcontestview, editannouncelistview, editannounceview, editclarificationsview, uploadtestdataview
 import awstools
 
-# GET ENVIRONMENT VARIABLES
-from password import FLASK_SECRET_KEY
-# END GET ENVIRONMENT VARIABLES
-
 app = Flask(__name__)
 
+FLASK_SECRET_KEY = os.environ.get('FLASK_SECRET_KEY')
 app.config['SECRET_KEY'] = FLASK_SECRET_KEY
 app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024 * 64
 app.config['SESSION_COOKIE_NAME'] = 'codebreaker-login'
@@ -79,7 +80,6 @@ def login():
         
     return render_template('login.html', form=form, userinfo=userinfo)
 
-
 @app.route('/logout')
 def logout():
     for key in list(session.keys()):
@@ -99,4 +99,4 @@ app.add_url_rule("/common/<path:path>", view_func=cppref2)
 
 ''' END CPP REFERENCE '''
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=False, port=5000)
