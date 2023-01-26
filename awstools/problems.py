@@ -1,3 +1,4 @@
+import os
 import json
 import boto3
 from awstools import awshelper
@@ -9,9 +10,9 @@ lambda_client = boto3.client('lambda')
 s3 = boto3.client('s3')
 SFclient = boto3.client('stepfunctions')
 
-judgeName = 'codebreakercontest'
-accountId = '354145626860'
-region = 'ap-southeast-1'
+judgeName = os.environ.get('JUDGE_NAME')
+accountId = os.environ.get('AWS_ACCOUNT_ID')
+region = os.environ.get('AWS_REGION')
 
 problems_table = dynamodb.Table(f'{judgeName}-problems')
 STATEMENTS_BUCKET_NAME = f'{judgeName}-statements'

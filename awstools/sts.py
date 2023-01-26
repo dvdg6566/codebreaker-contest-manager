@@ -1,3 +1,4 @@
+import os
 import boto3
 import json
 from time import sleep
@@ -7,7 +8,7 @@ from botocore.exceptions import ClientError
 iam_client = boto3.client('iam')
 sts_client = boto3.client('sts')
 
-judgeName = 'codebreakercontest'
+judgeName = os.environ.get('JUDGE_NAME')
 
 def createRole(problemName):
 

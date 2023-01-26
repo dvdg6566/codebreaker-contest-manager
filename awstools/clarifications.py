@@ -1,9 +1,10 @@
+import os
 import boto3
 from boto3.dynamodb.conditions import Key
 
 dynamodb = boto3.resource('dynamodb')
 
-judgeName = 'codebreakercontest'
+judgeName = os.environ.get('JUDGE_NAME')
 clarifications_table = dynamodb.Table(f'{judgeName}-clarifications')
 
 def createClarification(username, question, problemId):

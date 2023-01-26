@@ -1,12 +1,13 @@
 # Manages DynamoDB Users table
-
+import os
 import boto3
 from flask import session
 from awstools import awshelper
 from boto3.dynamodb.conditions import Key
 
+judgeName = os.environ.get('JUDGE_NAME')
 dynamodb = boto3.resource('dynamodb')
-users_table = dynamodb.Table('codebreakercontest-users')
+users_table = dynamodb.Table(f'{judgeName}-users')
 
 def getAllUsers():
     return awshelper.scan(users_table)

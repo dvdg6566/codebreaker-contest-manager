@@ -1,10 +1,10 @@
+import os
 import boto3
 from awstools import awshelper
 from boto3.dynamodb.conditions import Key
 
 dynamodb = boto3.resource('dynamodb')
-
-judgeName = 'codebreakercontest'
+judgeName = os.environ.get('JUDGE_NAME')
 announce_table = dynamodb.Table(f'{judgeName}-announcements')
 
 # Gets all announcements for homepage

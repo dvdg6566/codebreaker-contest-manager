@@ -5,7 +5,7 @@ from boto3.dynamodb.conditions import Key
 
 dynamodb = boto3.resource('dynamodb')
 
-judgeName = 'codebreakercontest'
+judgeName = os.environ.get('JUDGE_NAME')
 contests_table = dynamodb.Table(f'{judgeName}-contests')
 
 # Gets timezone from environment variables

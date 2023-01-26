@@ -1,7 +1,9 @@
 # Manages authentication and logins
+import os
 import boto3
 from botocore.exceptions import ClientError
 
+clientId = os.environ.get('COGNITO_CLIENT_ID')
 client = boto3.client('cognito-idp')
 
 def authenticate(username, password):
@@ -12,7 +14,7 @@ def authenticate(username, password):
 				"USERNAME" : username,
 		      	"PASSWORD" : password
 			},
-			ClientId = "30ie37hitd97h3nge5uhf4kodp"
+			ClientId = clientId
 		)
 		
 		return {'status': 200, 'username': username}

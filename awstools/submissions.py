@@ -1,5 +1,5 @@
 # Manages submission tables
-
+import os
 import json
 import boto3
 from datetime import datetime, timedelta
@@ -11,7 +11,7 @@ dynamodb = boto3.resource('dynamodb')
 lambda_client = boto3.client('lambda')
 SFclient = boto3.client('stepfunctions')
 
-judgeName = 'codebreakercontest'
+judgeName = os.environ.get('JUDGE_NAME')
 counters_table = dynamodb.Table(f'{judgeName}-global-counters')
 submissions_table = dynamodb.Table(f'{judgeName}-submissions')
 SUBMISSIONS_BUCKET_NAME = f'{judgeName}-submissions'
