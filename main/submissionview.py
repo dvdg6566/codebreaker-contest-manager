@@ -20,7 +20,7 @@ def submission(subId):
 
 	subDetails = awstools.submissions.getSubmission(int(subId))
 	if subDetails == None:
-		flash ("Sorry, the submission you're looking for doesn't exist. Refresh the page if you just made a submission.")
+		flash ("Sorry, the submission you're looking for doesn't exist.", "warning")
 		return redirect('/')
 
 	if userInfo['role'] != 'admin' and userInfo['username'] != subDetails['username']:
@@ -178,15 +178,17 @@ def submission(subId):
 				flash('You do not have permission to submit!','warning')
 				return redirect(f'/problem/{problemName}')
 			
-			result = request.form 
-
-			code = None
-			codeA = None
-			codeB = None
-
 			if not problem_info['validated']:
 				flash("Sorry, this problem is still incomplete.", "warning")
 				return redirect(f'/problem/{problemName}')
+
+			result = request.form 
+			code, codeA, codeB = '','',''
+			if problem_info['problem_type'] == 'Communication':
+				codeA = result['codeA']
+				codeB = result['codeB']
+			else:
+				code = result['code']
 
 			if max(len(code), len(codeA), len(codeB)) > 128000:
 				flash("Sorry, your code is too long.", "warning")
@@ -211,7 +213,6 @@ def submission(subId):
 				submissionId = newSubId,
 				username = subDetails['username'], 
 				submissionTime = None,
-				regradeall=False,
 				language = language,
 				problemType = problemInfo['problem_type']
 			)

@@ -36,12 +36,9 @@ def editproblem(problemId):
             problemInfo['nameB'] = 'placeholderA'
 
     form = updateProblemForm()
-    if problemInfo['problem_type'] == 'Interactive':
-        form.problem_type.choices = ["Interactive", "Batch", "Communication"]
-    elif problemInfo['problem_type'] == 'Batch':
-        form.problem_type.choices = ["Batch", "Communcation", "Interactive"]
-    else:
-        form.problem_type.choices = ["Communication", "Batch", "Interactive"]
+    form.problem_type.choices = ["Batch", "Communcation", "Interactive"]
+    form.problem_type.choices.remove(problemInfo['problem_type'])
+    form.problem_type.choices.insert(0,problemInfo['problem_type'])
 
     if form.is_submitted():
         result = request.form
@@ -172,7 +169,6 @@ def editproblem(problemId):
 
                 try:
                     cmd=f"g++ -O2 -o {compiledName} {sourceName} -m64 -static -std=gnu++14 -lm -s -w -Wall"
-                    #print(cmd)
                     subprocess.run(cmd, shell=True, check=True)
 		
                 except:
@@ -320,5 +316,4 @@ def editproblem(problemId):
             flash ("An error has occured", "warning")
             return redirect(f'/admin/editproblem/{problemId}')
 
-    print(problemInfo)
     return render_template('editproblem.html', form=form, info=problemInfo, userinfo=userInfo)

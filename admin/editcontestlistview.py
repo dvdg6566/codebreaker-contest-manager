@@ -32,7 +32,7 @@ def editcontesttable():
 		'contestName': request.form['contestName'],
 		'description': request.form['description'],
 		'startTime': str(startTime),
-		'endTime': str(endTime)
+		'endTime': str(endTime) 
 	}
 
 	awstools.contests.updateContestTable(contestId, params)

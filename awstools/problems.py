@@ -18,6 +18,7 @@ problems_table = dynamodb.Table(f'{judgeName}-problems')
 STATEMENTS_BUCKET_NAME = f'{judgeName}-statements'
 GRADERS_BUCKET_NAME = f'{judgeName}-graders'
 CHECKERS_BUCKET_NAME = f'{judgeName}-checkers'
+TESTDATA_BUCKET_NAME = f'{judgeName}-testdata'
 PROBLEM_VALIDATION_LAMBDA_NAME = f'arn:aws:lambda:{region}:{accountId}:function:{judgeName}-problem-validation'
 REGRADE_PROBLEM_LAMBDA_NAME = f'arn:aws:lambda:{region}:{accountId}:function:{judgeName}-regrade-problem'
 STEP_FUNCTION_ARN = f'arn:aws:states:{region}:{accountId}:stateMachine:Codebreaker-grading-v3'

@@ -153,13 +153,21 @@ def gradeSubmission(problemName,submissionId,username,submissionTime=None,regrad
 		"submissionId":int(submissionId),
 		"username":username,
 		"submissionTime":submissionTime,
-		"stitch":1, # Stitch should always be 1
-		"regrade":regrade,
-		"regradeall":regradeall,
 		"language":language, 
 		"grader": grader,
 		"problemType": problemType
 	}
+	'''
+	{
+		"problemName": "addition",
+		"submissionId":4,
+		"username":"0rang3",
+		"submissionTime":"submissionTime",
+		"language":"cpp", 
+		"grader": 0,
+		"problemType": "Batch"
+	}
+'''
 
 	stepFunctionARN = "arn:aws:states:ap-southeast-1:354145626860:stateMachine:Codebreaker-grading-v3"
 	res = SFclient.start_execution(stateMachineArn = stepFunctionARN, input = json.dumps(SF_input))
