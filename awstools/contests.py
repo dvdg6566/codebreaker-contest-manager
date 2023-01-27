@@ -1,6 +1,7 @@
 import os
 import boto3
 from awstools import awshelper
+from datetime import datetime, timedelta
 from boto3.dynamodb.conditions import Key
 
 dynamodb = boto3.resource('dynamodb')
@@ -8,24 +9,14 @@ dynamodb = boto3.resource('dynamodb')
 judgeName = os.environ.get('JUDGE_NAME')
 contests_table = dynamodb.Table(f'{judgeName}-contests')
 
-# Gets timezone from environment variables
-TIMEZONE_OFFSET = os.environ.get('TIMEZONE_OFFSET')
-
 def getAllContestIds():
 	contestIds = awshelper.scan(contests_table, ProjectionExpression='contestId')
 	return contestIds
 
 def getAllContestInfo():
-	print(TIMEZONE_OFFSET)
 	return awshelper.scan(contests_table,
-		ProjectionExpression = 'contestId, contestName, startTime, endTime, #PUBLIC, #DURATION, #USERS',
-		ExpressionAttributeNames={ "#PUBLIC": "public", "#DURATION" : "duration", '#USERS':'users' } #not direct cause users is a reserved word
-	)
-
-def getAllContestsLimited():
-	return awshelper.scan(contests_table,
-		ProjectionExpression = 'contestId, contestName, startTime, endTime, #PUBLIC',
-		ExpressionAttributeNames={ "#PUBLIC": "public"} #not direct cause users is a reserved word
+		# ProjectionExpression = 'contestId, contestName, startTime, endTime, #u',
+		ExpressionAttributeNames={'#u':'users' } # not direct cause users is a reserved word
 	)
 
 def getContestInfo(contestId):
@@ -37,35 +28,30 @@ def getContestInfo(contestId):
 		return None
 	return contest_info[0]
 
-def updateContestInfo(contest_id, info):
-	if info['endTime'] != "Unlimited":
-		testtime = datetime.strptime(info['endTime'], "%Y-%m-%d %X")
-	testtime = datetime.strptime(info['startTime'], "%Y-%m-%d %X")
+def updateContestInfo(contestId, info):
 	contests_table.update_item(
-		Key = {'contestId' : contest_id},
-		UpdateExpression = f'set contestName=:b, #wtf=:c, problems=:d, #kms=:e, #die=:f, scores=:g, startTime=:h, endTime=:i, description=:j, publicScoreboard=:k, editorial=:l, editorialVisible=:m, subLimit=:n, subDelay=:o',
-		ExpressionAttributeValues={':b':info['contestName'], ':c':info['duration'], ':d':info['problems'], ':e':info['public'], ':f':info['users'], ':g':info['scores'], ':h':info['startTime'], ':i':info['endTime'], ':j':info['description'], ':k':info['publicScoreboard'], ':l':info['editorial'], ':m':info['editorialVisible'], ':n':info['subLimit'], ':o':info['subDelay']},
-		ExpressionAttributeNames={'#wtf':'duration', '#kms':'public', '#die':'users'}
+		Key = {'contestId' : contestId},
+		UpdateExpression = f'set description=:b, contestName=:c, problems=:d, #u=:e, startTime=:f, endTime=:g, subLimit=:h, subDelay=:i',
+		ExpressionAttributeValues={':b':info['description'],':c':info['contestName'],':d':info['problems'],':e':info['users'], ':f':info['startTime'],':g':info['endTime'],':h':info['subLimit'],':i':info['subDelay']},
+		ExpressionAttributeNames={'#u':'users'}
 	)
-	addParticipation(contest_id, "ALLUSERS")
-	recalcContestInfo()
-	return True
 
-def createContestWithId(contest_id):
+def updateContestTable(contestId, info):
+	contests_table.update_item(
+		Key = {'contestId' : contestId},
+		UpdateExpression = f'set description=:b, contestName=:c, startTime=:d, endTime=:e',
+		ExpressionAttributeValues={':b':info['description'],':c':info['contestName'], ':d':info['startTime'],':e':info['endTime']}
+	)
+
+def createContest(contestId):
 	info = {}
-	info['description'] = ''
-	info['contestId'] = contest_id
+	info['contestId'] = contestId
+	info['description'] = f'Default description for id: {contestId}'
 	info['contestName'] = 'New Contest'
-	info['duration'] = 0
 	info['problems'] = []
-	info['public'] = False
-	info['publicScoreboard'] = False
 	info['users'] = {}
-	info['scores'] = {}
-	info['startTime'] = (datetime.now() + timedelta(hours=8)).strftime("%Y-%m-%d %X")
-	info['endTime'] =  "Unlimited"
-	info['editorial'] = ""
-	info['editorialVisible'] = False
-	info['subLimit'] = -1
-	info['subDelay'] = 10
-	updateContestInfo(contest_id, info)
+	info['startTime'] = (datetime(9999, 12, 1, 5, 0, 0)).strftime("%Y-%m-%d %X")
+	info['endTime'] =  (datetime(9999, 12, 1, 11, 0, 0)).strftime("%Y-%m-%d %X")
+	info['subLimit'] = 50
+	info['subDelay'] = 60
+	updateContestInfo(contestId, info)

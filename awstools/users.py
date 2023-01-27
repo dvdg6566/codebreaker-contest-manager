@@ -37,10 +37,11 @@ def getCurrentUserInfo():
         return None
 
 def createUser(username, email, role='member', fullname=''):
+    if fullname == '': fullname = username
     newUserInfo = {
-        'email' : email,
-        'role' : role,
         'username' : username,
+        'role' : role,
+        'email' : email,
         'fullname': fullname,
         'problemScores' : {},
         'contest': ''

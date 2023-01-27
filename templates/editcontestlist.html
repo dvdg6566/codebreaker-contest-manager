@@ -41,38 +41,113 @@
 	</form>
 
 		<br>
+		<h6> Do note that all times in the following table are in the timezone: GMT{{timezoneOffset}} </h6>
+		<br>
 
 		<div class="tab-content">
 
-
-		<!-- <div id="ongoing" class="container tab-pane active">
-		<table class="table table-hover" id="myTable">
-				<thead class="thead-dark">
-						<tr>
-								<th scope="col">Contest Name</th>
-				<th scope="col">Contest ID</th>
-								<th scope="col">Start Time</th>
-								<th scope="col">End Time</th>
-								<th scope="col">Duration (Mins)</th>
-						</tr>
-						</thead>
-
-						<tbody>
-						{% for info in contestsInfo.ongoing %}
-				<tr>
-					<th scope="row"> <a href="{{url_for('editcontest', contestId=info.contestId)}}" class="pl-2">{{info.contestName}}</a> </th>
-					<td> {{info.contestId}} </td>
-										<td> {{info.startTime}} </td>
-										<td> {{info.endTime}} </td>
-										<td> {{info.duration if info.duration != 0 else "None"}}</td>
-							</tr>
-						{% endfor %}
-				</tbody>
-		</table>
-		</div> -->
+			<table class="table table-hover">
+			  <thead class="thead-dark">
+			    <tr>
+			      <th>Contest Id</th>
+			      <th>Problems </th>
+			      <th>Contest Name</th>
+			      <th>Description</th>
+			      <th>Start Time</th>
+			      <th>End Time</th>
+			      <th>Duration</th>
+			      <th>Actions</th>
+			    </tr>
+			  </thead>
+			  <tbody>
+			  	{% for contest in contestsInfo %}
+			    <tr>
+			      <td><a href="{{url_for('editcontest', contestId=contest.contestId)}}">{{contest.contestId}}</a></td>
+			      <td>
+			      	<p>
+							{%for problem in contest.problems %}
+							<a href="{{url_for('editproblem',problemId=problem)}}"> {{problem}} </a>
+							<br>
+							{%endfor%}
+			      	</p>
+			      </td>
+			      <td class="editable">{{contest.contestName}}</td>
+			      <td class="editable">{{contest.description}}</td>
+			      <td class="editable dt"><tt>{{contest.startTime}}</tt></td>
+			      <td class="editable dt"><tt>{{contest.endTime}}</tt></td>
+			      <td class="dur"><tt>{{contest.duration}}</tt></td>
+			      <td>
+			        <button class="edit-btn">Edit</button>
+			        <button class="save-btn">Save</button>
+			      </td>
+			    </tr>
+			    {%endfor%}
+			  </tbody>
+			</table>
 
 		</div>
+		<script>
+			// I never intended to use JS to replace flask forms, but ChatGPT recommended it
+			$(".edit-btn").click(function(){
+			  var row = $(this).closest("tr");
+			  row.find(".editable").attr("contenteditable", true);
+			  $(this).hide();
+			  row.find(".save-btn").show();
+			});
 
+			$(".save-btn").click(function(){
+			  var row = $(this).closest("tr");
+				
+				// gets the values from rows
+				var row = $(this).closest("tr")
+				var rowvalues = row.map(function() {
+				  return $(this).find('td').map(function() {
+				    return $(this).text();
+				  }).get();
+				}).get();
+
+				rowvalues.pop(); // remove buttons from row
+				rowvalues.splice(1,1); // remove the problem list
+
+				var startTime = new Date(rowvalues[3]);
+				var endTime = new Date(rowvalues[4]);
+
+				if (isNaN(startTime) || isNaN(endTime)){
+					alert("Invalid Time!")
+					return;
+				}else if (startTime > endTime){
+					alert("Invalid Duration!")
+					return;
+				}
+
+				// update valid time
+				let duration = endTime - startTime;
+				let hhmmssFormat = new Date(duration).toISOString().substr(11, 8);
+				// updateds row HTML
+				row.find(".dur").html("<tt>" + hhmmssFormat + "</tt>");
+
+				// enable edit button
+				row.find(".editable").attr("contenteditable", false);
+			  $(this).hide();
+			  row.find(".edit-btn").show();
+
+			  // updates database
+				params = {
+					'contestId':rowvalues[0],
+					'contestName':rowvalues[1],
+					'description': rowvalues[2],
+					'startTime': rowvalues[3],
+					'endTime': rowvalues[4]
+				}
+
+				$.post('/admin/editcontesttable',params).done((response) => {
+					if (response.status !== 200){
+						alert(response.error)
+					}
+				})
+				// console.log(rowvalues);
+			});
+		</script>
 </div>
 
 {% endblock %}

@@ -11,7 +11,7 @@ import os
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
-from main import submissionview, profileview, submissionlistview, contestview, contestlistview, scoreboardview, credits, problemview, announcelistview, announceview, defaultview, clarificationsview, homeview
+from main import submissionview, profileview, submissionlistview, contestview, contestlistview, scoreboardview, credits, problemview, announcelistview, announceview, clarificationsview, homeview, loginview
 from admin import adminview, editproblemlistview, editusersview, editproblemview, editcontestlistview, editcontestview, editannouncelistview, editannounceview, editclarificationsview, uploadtestdataview
 import awstools
 
@@ -38,6 +38,7 @@ app.add_url_rule('/credits',view_func=credits.credits)
 app.add_url_rule('/admin/editproblem/<problemId>', view_func = editproblemview.editproblem, methods = ['GET', 'POST'])
 app.add_url_rule('/admin/uploadtestdata/<problemId>', view_func = uploadtestdataview.uploadtestdata, methods = ['GET'])
 app.add_url_rule('/admin/editcontests',view_func=editcontestlistview.editcontestlist, methods=['GET', 'POST'])
+app.add_url_rule('/admin/editcontesttable', view_func=editcontestlistview.editcontesttable, methods=['POST'])
 app.add_url_rule('/admin/editcontest/<contestId>', view_func = editcontestview.editcontest, methods = ['GET', 'POST'])
 app.add_url_rule('/admin/editcontestproblems',view_func=editcontestview.editcontestproblems, methods = ['POST'])
 app.add_url_rule('/admin/editannouncements', view_func=editannouncelistview.editannouncelist, methods=['GET','POST'])
@@ -46,48 +47,8 @@ app.add_url_rule('/announcements', view_func=announcelistview.announcelist)
 app.add_url_rule('/announcement/<announceId>', view_func=announceview.announce)
 app.add_url_rule('/clarifications', view_func=clarificationsview.clarifications, methods=['GET','POST'])
 app.add_url_rule('/admin/editclarifications', view_func=editclarificationsview.editclarifications, methods=['GET','POST'])
-
-''' BEGIN: AUTHENTICATION WITH AWS COGNITO'''
-    
-@app.route('/login', methods=['GET','POST'])
-def login():
-    userinfo = awstools.users.getCurrentUserInfo()
-
-    if userinfo != None:
-        flash ("Aready Logged in!", "warning")
-        return redirect('/')
-    
-    form = LoginForm()
-    
-    if form.is_submitted():
-        result = request.form
-        username = result['username']
-        password = result['password']
-
-        response = awstools.cognito.authenticate(username, password)
-        
-        if response['status'] != 200: # 403 access denied, 400 error
-            flash ('Incorrect password!', 'danger')
-            return redirect('/login')
-
-        flash ('Login Success!', 'success')
-        
-        print(session)
-        session['username'] = username
-        session.permanent = True
-
-        return redirect('/')
-        
-    return render_template('login.html', form=form, userinfo=userinfo)
-
-@app.route('/logout')
-def logout():
-    for key in list(session.keys()):
-        session.pop(key)
-
-    return redirect('/')
-
-''' END AUTHENTICATION '''
+app.add_url_rule('/login', view_func=loginview.login, methods = ['GET', 'POST'])
+app.add_url_rule('/logout', view_func=loginview.logout, methods = ['GET'])
 
 ''' BEGIN CPP REFERENCE '''
 def cppref(path):
