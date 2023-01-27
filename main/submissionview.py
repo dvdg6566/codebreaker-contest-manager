@@ -91,7 +91,7 @@ def submission(subId):
 		if i < len(subtaskScores):
 			yourScore = subtaskScores[i]
 
-		yourScore = fixFloat(maxScore*yourScore/100)
+		yourScore = formatFloat(maxScore*yourScore/100)
 		detail = {'number' : i, 'maxScore': maxScore, 'yourScore': yourScore, 'verdict': 'AC', 'testcases' : [], 'done' : True}
 		stopVerdict = 0
 		
@@ -131,7 +131,7 @@ def submission(subId):
 					detail['verdict'] = 'PS'
 				minScore = min(minScore, scores[ind])
 		detail['yourScore'] = max(detail['yourScore'], maxScore * minScore / 100)
-		detail['yourScore'] = fixFloat(detail['yourScore'])
+		detail['yourScore'] = formatFloat(detail['yourScore'])
 		totalScore += detail['yourScore']
 
 		diffInTime = (datetime.datetime.utcnow() + datetime.timedelta(hours=8) - datetime.datetime.strptime(gradingTime, '%Y-%m-%d %H:%M:%S')).total_seconds()
@@ -150,7 +150,6 @@ def submission(subId):
 	form = ResubmitForm()
 
 	if form.is_submitted():
-
 		result = request.form
 		if 'form_name' in result and result['form_name'] == 'regrade':
 			''' REGRADE: ONLY ADMIN CAN REGRADE'''
@@ -164,7 +163,6 @@ def submission(subId):
 				submissionId = subId,
 				username = subDetails['username'], 
 				submissionTime = subDetails['submissionTime'],
-				regradeall=False,
 				language = language,
 				problemType = problemInfo['problem_type']
 			)
@@ -172,19 +170,19 @@ def submission(subId):
 			time.sleep(2)
 			return redirect(f"/submission/{subId}")
 		
-		elif 'form_name' in result and result['form_name'] == 'resubmit':
+		else:
 			''' RESUBMIT '''
 			if userInfo == None:
 				flash('You do not have permission to submit!','warning')
 				return redirect(f'/problem/{problemName}')
 			
-			if not problem_info['validated']:
+			if not problemInfo['validated']:
 				flash("Sorry, this problem is still incomplete.", "warning")
 				return redirect(f'/problem/{problemName}')
 
 			result = request.form 
 			code, codeA, codeB = '','',''
-			if problem_info['problem_type'] == 'Communication':
+			if problemInfo['problem_type'] == 'Communication':
 				codeA = result['codeA']
 				codeB = result['codeB']
 			else:
@@ -218,10 +216,6 @@ def submission(subId):
 			)
 
 			time.sleep(2)
-			return redirect(f"/submission/{newSubId}")
-
-		else:
-			flash("An error has occured", "danger")
 			return redirect(f"/submission/{newSubId}")
 
 	'''END RESUBMISSION'''

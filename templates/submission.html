@@ -152,7 +152,7 @@
 					{%endif%}
 
 					<!-- If this is your own submission, then allow regrading-->
-					{% if userinfo != None and subDetails.username  == userinfo['username'] %}
+					{% if subDetails.username  == userinfo['username'] %}
 						{% if probleminfo['problem_type'] != 'Communication' %}
 						<p id="submitButtonParagraph2">{{form.submit(class="btn btn-secondary", onclick="onSubmit()", form="submitCodeForm")}}</p>
 						{% else %}
@@ -160,7 +160,7 @@
 						{% endif %}
 
 					{% endif %}
-					{% if (userinfo.role == "superadmin") or (not contest and userinfo.role == "admin") %}
+					{% if userinfo.role == "admin" %}
 						<form action="" method="post" class="form-group">
 							<input type="hidden" name="form_name" value="regrade">
 							<input type="submit" value="Regrade" class="btn btn-secondary navbar">

@@ -12,9 +12,13 @@ lambda_client = boto3.client('lambda')
 SFclient = boto3.client('stepfunctions')
 
 judgeName = os.environ.get('JUDGE_NAME')
+accountId = os.environ.get('AWS_ACCOUNT_ID')
+region = os.environ.get('AWS_REGION')
+
 counters_table = dynamodb.Table(f'{judgeName}-global-counters')
 submissions_table = dynamodb.Table(f'{judgeName}-submissions')
 SUBMISSIONS_BUCKET_NAME = f'{judgeName}-submissions'
+stepFunctionARN = f"arn:aws:states:{region}:{accountId}:stateMachine:{judgeName}-grading"
 subPerPage = 25
 
 # Submission View page: Gets all details to do with submission 
@@ -137,12 +141,10 @@ def uploadSubmission(code, s3path):
 	s3_resource.Object(SUBMISSIONS_BUCKET_NAME, s3path).put(Body=code)
 
 # Sends submission to be regraded by Step Function
-def gradeSubmission(problemName,submissionId,username,submissionTime=None,regradeall=False,language='cpp',problemType='Batch'):
-	regrade=True
-
+def gradeSubmission(problemName,submissionId,username,submissionTime=None,language='cpp',problemType='Batch'):
+	
 	# If no submission time already recorded, this is a new submission
 	if submissionTime == None:
-		regrade=False
 		submissionTime = (datetime.utcnow()+timedelta(hours=8)).strftime("%Y-%m-%d %X")
 	
 	# Grader required if problem is not batch
@@ -157,6 +159,8 @@ def gradeSubmission(problemName,submissionId,username,submissionTime=None,regrad
 		"grader": grader,
 		"problemType": problemType
 	}
+
+	print(json.dumps(SF_input))
 	'''
 	{
 		"problemName": "addition",
@@ -167,9 +171,8 @@ def gradeSubmission(problemName,submissionId,username,submissionTime=None,regrad
 		"grader": 0,
 		"problemType": "Batch"
 	}
-'''
+	'''
 
-	stepFunctionARN = "arn:aws:states:ap-southeast-1:354145626860:stateMachine:Codebreaker-grading-v3"
 	res = SFclient.start_execution(stateMachineArn = stepFunctionARN, input = json.dumps(SF_input))
 
 ''' END: GRADING '''
