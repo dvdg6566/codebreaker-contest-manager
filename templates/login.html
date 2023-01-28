@@ -29,6 +29,7 @@
         <label for="name"><b>Password</b></label>
         {{form.password(class = "newuserinput", placeholder="Enter Password", required='required')}}
         
+        <input type="hidden" name="next" value="{{ request.args.get('next', '') }}" />
         <br>
 
         <hr>

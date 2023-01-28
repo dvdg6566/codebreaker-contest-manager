@@ -13,8 +13,10 @@ def login():
     
     if form.is_submitted():
         result = request.form
-        username = result['username']
-        password = result['password']
+        username = request.form.get("username")
+        password = request.form.get("password")
+        next_url = request.form.get("next")
+        print(next_url)
 
         response = awstools.cognito.authenticate(username, password)
         
@@ -27,6 +29,8 @@ def login():
         session['username'] = username
         session.permanent = True
 
+        if next_url:
+            return redirect(next_url)
         return redirect('/')
         
     return render_template('login.html', form=form, userinfo=userinfo)

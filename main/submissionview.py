@@ -11,6 +11,8 @@ from forms import ResubmitForm
 
 def submission(subId):
 	userInfo = awstools.users.getCurrentUserInfo()
+	if userInfo == None: return redirect(url_for("login", next=request.url))
+
 	if not awstools.users.judgeAccess(userInfo):
 		return redirect('/')
 

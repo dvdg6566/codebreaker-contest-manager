@@ -11,7 +11,7 @@ languages = get_languages()
 
 def problem(problemName):
 	userInfo = awstools.users.getCurrentUserInfo()
-	if userInfo == None: return redirect("/login")
+	if userInfo == None: return redirect(url_for("login", next=request.url))
 
 	# TODO: Do authentication on whether user allowed to view problem
 

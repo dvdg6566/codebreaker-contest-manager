@@ -11,7 +11,7 @@ import os
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
-from main import submissionview, profileview, submissionlistview, contestview, contestlistview, scoreboardview, credits, problemview, announcelistview, announceview, clarificationsview, homeview, loginview
+from main import submissionview, profileview, submissionlistview, credits, problemview, announcelistview, announceview, clarificationsview, homeview, loginview
 from admin import adminview, editproblemlistview, editusersview, editproblemview, editcontestlistview, editcontestview, editannouncelistview, editannounceview, editclarificationsview, uploadtestdataview
 import awstools
 
@@ -25,9 +25,7 @@ app.config['SESSION_COOKIE_NAME'] = 'codebreaker-login'
 app.add_url_rule('/', view_func=homeview.home, methods=["GET"])
 app.add_url_rule('/problem/<problemName>', methods=["GET","POST"], view_func=problemview.problem)
 app.add_url_rule('/submission/<subId>', view_func = submissionview.submission, methods = ['GET', 'POST'])
-app.add_url_rule('/contests', view_func = contestlistview.contestlist)
-app.add_url_rule('/contest/<contestId>', view_func = contestview.contest, methods = ['GET', 'POST'])
-app.add_url_rule('/contest/<contestId>/scoreboard', view_func = scoreboardview.scoreboard)
+# app.add_url_rule('/contest/<contestId>/scoreboard', view_func = scoreboardview.scoreboard)
 app.add_url_rule('/submissions',view_func = submissionlistview.submissionlist, methods=['GET', 'POST'])
 app.add_url_rule('/profile/<username>', view_func = profileview.profile)
 app.add_url_rule('/admin',view_func=adminview.admin)

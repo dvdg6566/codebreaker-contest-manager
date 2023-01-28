@@ -11,9 +11,7 @@ def submissionlist():
     problem = request.args.get('problem')
     userInfo = awstools.users.getCurrentUserInfo()
 
-    if userInfo == None:
-        flash('Sorry, you are not logged in yet', 'warning')
-        return redirect('/login')
+    if userInfo == None: return redirect(url_for("login", next=request.url))
 
     # Force redirect back to your own submissions
     if userInfo['role'] == 'member' and userInfo['username'] != username:
