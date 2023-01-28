@@ -11,31 +11,64 @@
 {% endif %}
 {% endwith %}
 {% block content %}
-
 <br>
 <div class="container">
+	<div class="container">
+		{% with messages = get_flashed_messages(with_categories=true) %}
+		{% if messages %}
+		{% for category, message in messages %}
+		<div class="alert alert-{{category}} alert-dismissible fade show mt-4" role="alert">
+			{{message}}
+			<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+				<span aria-hidden="true">&times;</span>
+			</button>
+		</div>
+		{% endfor %}
+		{% endif %}
+		{% endwith %}
+	</div>
+
 	<h1> Announcements </h1>
 	<br>
-	{% for info in announceinfo %}
-	<div class="card text-left" style="margin-bottom: -1px; margin-right: 12px;">
-		<div class="card-header bg-white" data-toggle="collapse" data-target="#{{info.announceId}}">
-			{% if info.adminOnly %}
-				<a href="/announcement/{{info.announceId}}"><b>{{info.aTitle}}</b></a>
-			{% else %}
-				<a href="/announcement/{{info.announceId}}">{{info.aTitle}}</a>
-			{% endif %}
-		</div>
-		<div id="{{info.announceId}}" class="collapse" style="">
-			<div class="card-body">
-				<p class="card-text">{{info.aSummary}}</p>
-				{% if info.contestLink != "" %}
-				<a href="/contest/{{info.contestLink}}">Contest link</a>
-				{% endif %}
+	<!-- Post New Announcement -->
+	{% if userinfo.role == 'admin' %}
+		<p>
+			<button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+				Post New Announcement (Admin Only)
+			</button>
+		</p>
+		<div class="collapse" id="collapseExample">
+			<div class="card card-body">
+				<form id="newannouncement" action="" method="POST" class="form-group" onSubmit="return confirm('Are you sure you want to post new announcement and notify all contestants?');">
+					<div class="input-group mb-3">
+						<!-- Input for title -->
+						<div class="input-group-prepend">
+							<span class="input-group-text">Title</span>
+						</div>
+						{{form.announcement_title(type='text', placeholder='Announcement Title', class='form-control')}}
+					</div>
+					<!-- Input for text -->
+					<p>{{form.announcement_text(placeholder='Announcement Text', class='form-control')}}</p>
+
+					{{form.submit(type='submit', id='submitbutton', class='btn btn-secondary')}}
+				</form>
 			</div>
 		</div>
+		<hr>
+		<br>
+	{%endif%}
+
+	{% for info in announcementsInfo %}
+	<div class="card card-body">
+		<h6> {{info.title}} 
+			<span style="float:right;">
+        {{info.announcementTime}}
+    	</span>
+		</h6>
+		<hr>
+		<p> {{info.text}} </p>
 	</div>
 	<br>
 	{% endfor %}
 </div>
 {% endblock %}
-
