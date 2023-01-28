@@ -27,16 +27,44 @@
 		{% endif %}
 		{% endwith %}
 	</div>
+
 	<h1> Edit Announcements </h1>
 	<br>
-	<form action="" method="post" class="form-group" id="addannouncementform">
-		<div class="input-group mb-3">
-			{{form.announce_id(type='text', placeholder='Announcement ID', class='form-control', pattern="[a-zA-Z0-9_]+")}}
-			{{form.submit(type='submit', class='btn btn-secondary')}}
+	<!-- Post New Announcement -->
+	<p>
+		<button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+			Post New Announcement
+		</button>
+	</p>
+	<div class="collapse" id="collapseExample">
+		<div class="card card-body">
+			<form id="newannouncement" action="" method="POST" class="form-group" onSubmit="return confirm('Are you sure you want to post new announcement and notify all contestants?');">
+				<div class="input-group mb-3">
+					<!-- Input for title -->
+					<div class="input-group-prepend">
+						<span class="input-group-text">Title</span>
+					</div>
+					{{form.announcement_title(type='text', placeholder='Announcement Title', class='form-control')}}
+				</div>
+				<!-- Input for text -->
+				<p>{{form.announcement_text(placeholder='Announcement Text', class='form-control')}}</p>
+
+				{{form.submit(type='submit', id='submitbutton', class='btn btn-secondary')}}
+			</form>
 		</div>
-	</form>
-	{% for info in announceinfo %}
-	<div class="card text-left" style="margin-bottom: -1px; margin-right: 12px;">
+	</div>
+
+	{% for info in announcementsInfo %}
+	<div class="card card-body">
+		<h6> {{info.title}} 
+			<span style="float:right;">
+        {{info.announcementTime}}
+    	</span>
+		</h6>
+		<hr>
+		<p> {{info.text}} </p>
+	</div>
+	<!-- <div class="card text-left" style="margin-bottom: -1px; margin-right: 12px;">
 		<div class="card-header bg-white" data-toggle="collapse" data-target="#{{info.announceId}}">
 			{% if info.adminOnly %}
 				<a href="/admin/editannouncement/{{info.announceId}}"><b>{{info.aTitle}}</b></a>
@@ -52,7 +80,7 @@
 				{% endif %}
 			</div>
 		</div>
-	</div>
+	</div> -->
 	<br>
 	{% endfor %}
 </div>

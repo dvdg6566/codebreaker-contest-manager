@@ -33,17 +33,13 @@ class searchSubmissionForm(FlaskForm):
 
 class updateProblemForm(FlaskForm):
     problem_title = StringField('problem_title')
-    problem_author = StringField('problem_author')
-    problem_source = StringField('problem_source')
     problem_type = SelectField('problem_type')
     contest_link = StringField('contest_link')
     time_limit = DecimalField('time_limit')
     memory_limit = IntegerField('memory_limit')
     feedback = BooleanField('feedback')
-    editorial_visible = BooleanField('editorial_visible')
     analysis = BooleanField('analysis')
     checker = BooleanField('checker')
-    superhidden = BooleanField('superhidden')
     attachments = BooleanField('attachments')
     submit = SubmitField('Update')
     nameA = StringField('nameA')
@@ -83,18 +79,10 @@ class updateContestGroupForm(FlaskForm):
     contest_group_visible = BooleanField('contest_group_visible')
     submit = SubmitField('Update')
 
-class addAnnouncementForm(FlaskForm):
-    announce_id = StringField('announce_id')
-    submit = SubmitField('Add Announcement')
-
-class updateAnnouncementForm(FlaskForm):
-    announce_name = StringField('announce_name')
-    announce_summary = TextAreaField('announce_summary')
-    announce_text = TextAreaField('announce_text')
-    announce_visible = BooleanField('announce_visible')
-    announce_admin_only = BooleanField('announce_admin_only')
-    announce_link = StringField('announce_link')
-    submit = SubmitField('Update')
+class newAnnouncementForm(FlaskForm):
+    announcement_title = StringField('announcement_title')
+    announcement_text = TextAreaField('announcement_text')
+    submit = SubmitField('Submit')
 
 class addClarificationForm(FlaskForm):
     clarification_question = TextAreaField('clarification_question')

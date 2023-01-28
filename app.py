@@ -11,8 +11,8 @@ import os
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
-from main import submissionview, profileview, submissionlistview, credits, problemview, announcelistview, announceview, clarificationsview, homeview, loginview
-from admin import adminview, editproblemlistview, editusersview, editproblemview, editcontestlistview, editcontestview, editannouncelistview, editannounceview, editclarificationsview, uploadtestdataview
+from main import submissionview, profileview, submissionlistview, credits, problemview, announcelistview, clarificationsview, homeview, loginview
+from admin import adminview, editproblemlistview, editusersview, editproblemview, editcontestlistview, editcontestview, editannouncelistview, editclarificationsview, uploadtestdataview
 import awstools
 
 app = Flask(__name__)
@@ -40,9 +40,7 @@ app.add_url_rule('/admin/editcontesttable', view_func=editcontestlistview.editco
 app.add_url_rule('/admin/editcontest/<contestId>', view_func = editcontestview.editcontest, methods = ['GET', 'POST'])
 app.add_url_rule('/admin/editcontestproblems',view_func=editcontestview.editcontestproblems, methods = ['POST'])
 app.add_url_rule('/admin/editannouncements', view_func=editannouncelistview.editannouncelist, methods=['GET','POST'])
-app.add_url_rule('/admin/editannouncement/<announceId>', view_func=editannounceview.editannounce, methods=['GET','POST'])
 app.add_url_rule('/announcements', view_func=announcelistview.announcelist)
-app.add_url_rule('/announcement/<announceId>', view_func=announceview.announce)
 app.add_url_rule('/clarifications', view_func=clarificationsview.clarifications, methods=['GET','POST'])
 app.add_url_rule('/admin/editclarifications', view_func=editclarificationsview.editclarifications, methods=['GET','POST'])
 app.add_url_rule('/login', view_func=loginview.login, methods = ['GET', 'POST'])

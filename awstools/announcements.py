@@ -1,48 +1,27 @@
 import os
+import json
 import boto3
+from uuid import uuid4
+from datetime import datetime
+
 from awstools import awshelper
 from boto3.dynamodb.conditions import Key
 
 dynamodb = boto3.resource('dynamodb')
 judgeName = os.environ.get('JUDGE_NAME')
-announce_table = dynamodb.Table(f'{judgeName}-announcements')
+announcements_table = dynamodb.Table(f'{judgeName}-announcements')
 
 # Gets all announcements for homepage
-def getAllAnnounces():
-	return awshelper.scan(announce_table, 
-		ProjectionExpression='announceId, priority, visible, aSummary, aTitle, adminOnly, contestLink'
-	)
+def getAllAnnouncements():
+	return awshelper.scan(announcements_table)
 
-# Detailed view of announcement
-def getAnnounceWithId(announceId):
-	response=announce_table.query(
-		KeyConditionExpression = Key('announceId').eq(announceId)
-	)
-	info=response['Items']
-	if len(info) == 0: return "This announcement doesn't exist"
-	if len(info) != 1: return "An error has occurred"
-
-	info = info[0]
-	return info
-
-def updateAnnounce(announceId, info):
-	announce_table.update_item(
-		Key = {'announceId': announceId},
-		UpdateExpression = f'set priority=:a, visible=:b, aTitle=:c, aSummary=:d, aText=:e, adminOnly=:f, contestLink = :g',
-		ExpressionAttributeValues={':a':info['priority'], ':b':info['visible'], ':c':info['aTitle'], ':d':info['aSummary'], ':e':info['aText'], ':f':info['adminOnly'], ':g':info['contestLink']}
-	)
-
-def createAnnounceWithId(announceId):
-	ann = getAllAnnounces()
+def createAnnouncement(title, text):
 	info = {}
-	info['priority'] = 1
-	for an in ann:
-		info['priority'] = max(info['priority'], an['priority']+1)
-	info['announceId'] = announceId
-	info['visible'] = False
-	info['adminOnly'] = False
-	info['aTitle'] = announceId
-	info['aSummary'] = "default summary of announce"
-	info['aText'] = "default text of announce"
-	info['contestLink'] = ""
-	updateAnnounce(announceId, info)
+	info['announcementId'] = str(uuid4())
+	info['title'] = title
+	info['text'] = text
+	info['announcementTime'] = str(datetime.utcnow().strftime("%Y-%m-%d %X"))
+
+	# Trigger AWS Lambda function to activate announcement notification
+
+	announcements_table.put_item(Item=info)

@@ -1,38 +1,40 @@
+import os
 from flask import render_template, session, redirect, request, flash
+from datetime import datetime, timedelta
 import awstools
-from forms import addAnnouncementForm
+from forms import newAnnouncementForm
+
+# Gets timezone from environment variables
+
+TIMEZONE_OFFSET = int(os.environ.get('TIMEZONE_OFFSET'))
 
 def editannouncelist():
-    userInfo=awstools.getCurrentUserInfo()
-    announceInf=awstools.getAllAnnounces()
-    if userInfo == None or (userInfo['role'] != 'admin' and userInfo['role'] != 'superadmin'):
-        flash("Admin access is required", "warning")
-        return redirect("/")
-    if contestmode.contest() and (userInfo['role'] != 'superadmin' and userInfo['username'] not in contestmode.allowedusers()):
-        flash("You do not have access in contest mode", "warning")
-        return redirect("/")
-    form=addAnnouncementForm()
-    announceInfl = []
-    for info in announceInf:
-        announceInfl.append((info['priority'], info))
-    announceInfl.sort()
-    announceInfl.reverse()
-    announceInfo = []
-    announcenames = []
-    for info in announceInfl:
-        announceInfo.append(info[1])
-        announcenames.append(info[1]['announceId'])
-    if form.is_submitted():
-        result = request.form
-        if result['announce_id'] == '':
-            flash('oopsies! did you accidentally click to add announcements?', 'warning')
-            return redirect('/admin/editannouncements')
-        if result['announce_id'] in announcenames:
-            flash('oopsies! announcement id already taken :(', 'warning')
-            return redirect('/admin/editannouncements')
-        awstools.createAnnounceWithId(result['announce_id'])
-        announce_id = result['announce_id']
-        return redirect(f'/admin/editannouncement/{announce_id}')
+	userInfo=awstools.users.getCurrentUserInfo()
+	if userInfo == None: return redirect(url_for("login", next=request.url))
+	if userInfo['role'] != 'admin':
+		flash("Admin access is required", "warning")
+		return redirect("/")
 
-    return render_template('editannouncelist.html', form=form, userinfo=userInfo, announceinfo=announceInfo, socket=contestmode.socket())
+	announcementsInfo = awstools.announcements.getAllAnnouncements()
+	for announcement in announcementsInfo:
+		timestamp = datetime.strptime(announcement['announcementTime'], "%Y-%m-%d %X")
+		timestamp += timedelta(hours=TIMEZONE_OFFSET)
+		announcement['announcementTime'] = datetime.strftime(timestamp, "%Y-%m-%d %X")
+		print(timestamp)
+
+	form=newAnnouncementForm()
+
+	if form.is_submitted():
+		result = request.form
+
+		title = result.get('announcement_title')
+		text = result.get('announcement_text')
+		
+		awstools.announcements.createAnnouncement(title=title, text=text)
+
+		flash("Announcement Posted", "success")
+
+		return redirect(f'/admin/editannouncements')
+
+	return render_template('editannouncelist.html', form=form, userinfo=userInfo, announcementsInfo=announcementsInfo)
 
