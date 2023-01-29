@@ -1,5 +1,8 @@
 import os
 import boto3
+from datetime import datetime
+
+from awstools import awshelper
 from boto3.dynamodb.conditions import Key
 
 dynamodb = boto3.resource('dynamodb')
@@ -7,38 +10,32 @@ dynamodb = boto3.resource('dynamodb')
 judgeName = os.environ.get('JUDGE_NAME')
 clarifications_table = dynamodb.Table(f'{judgeName}-clarifications')
 
-def createClarification(username, question, problemId):
-    clarificationId = getNextClarificationId()
-    info = {}
-    info['askedBy'] = username
-    info['question'] = question
-    info['problemId'] = problemId
-    info['answer'] = ""
-    info['answeredBy'] = ""
-    updateClarificationInfo(clarificationId, info)
+def createClarification(username, problemName, question):
+	clarificationId = getNextClarificationId()
+	info = {}
+	info['askedBy'] = username
+	info['question'] = question
+	info['clarificationTime'] = str(datetime.utcnow().strftime("%Y-%m-%d %X"))
+	info['problemName'] = problemName
+	info['answer'] = ""
+	info['answeredBy'] = ""
+	clarifications_table.put_item(Item=info)
+	# Notify admins of new clarification
 
-def updateClarificationInfo(clarificationId, info):
-    clarifications_table.update_item(
-        Key = {'clarificationId':clarificationId},
-        UpdateExpression = f'set askedBy=:a,question=:b,problemId=:c,answer=:d,answeredBy=:e',
-        ExpressionAttributeValues={':a':info['askedBy'],':b':info['question'],':c':info['problemId'],':d':info['answer'],':e':info['answeredBy']}
-    )
-
-def getClarificationInfo(clarificationId):
-    response = clarifications_table.query(
-        KeyConditionExpression = Key('clarificationId').eq(clarificationId)
-    )
-    clarification_info = response['Items']
-    if len(clarification_info) == 0:
-        return None
-    return clarification_info[0]
+def answerClarification(askedBy, clarificationTime, answer, answeredBy):
+	# askedBy, clarificationTime form primary key
+	clarifications_table.update_item(
+		Key = {'clarificationId':clarificationId, 'clarificationTime': clarificationTime},
+		UpdateExpression = f'set answer=:a,answeredBy=:b',
+		ExpressionAttributeValues={':a':info['askedBy'],':b':info['answeredBy']}
+	)
+	# Notify user that clarification has been answered
 
 def getClarificationsByUser(username):
-    response = clarifications_table.query(
-        IndexName = 'askedByIndex',
-        KeyConditionExpression = Key('askedBy').eq(username),
-    )
-    return response['Items']
+	response = clarifications_table.query(
+		KeyConditionExpression = Key('askedBy').eq(username)
+	)
+	return response['Items']
 
 def getAllClarifications():
-    return scan(clarifications_table)
+	return awshelper.scan(clarifications_table)

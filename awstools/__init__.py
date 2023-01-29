@@ -7,6 +7,7 @@ from . import cognito
 from . import contests
 from . import problems
 from . import awshelper
+from . import websocket
 from . import submissions
 from . import announcements
 from . import clarifications

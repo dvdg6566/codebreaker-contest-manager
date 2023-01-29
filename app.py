@@ -1,10 +1,5 @@
-import flask
-from flask import Flask,session,redirect,send_from_directory,render_template,request,flash
-from forms import LoginForm
+from flask import Flask
 
-from waitress import serve
-
-import io
 import os
 
 # Loads environment variables using dotenv
@@ -12,7 +7,7 @@ from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
 from main import submissionview, profileview, submissionlistview, credits, problemview, announcelistview, clarificationsview, homeview, loginview
-from admin import adminview, editproblemlistview, editusersview, editproblemview, editcontestlistview, editcontestview, editclarificationsview, uploadtestdataview
+from admin import adminview, editproblemlistview, editusersview, editproblemview, editcontestlistview, editcontestview, uploadtestdataview
 import awstools
 
 app = Flask(__name__)
@@ -41,7 +36,6 @@ app.add_url_rule('/admin/editcontest/<contestId>', view_func = editcontestview.e
 app.add_url_rule('/admin/editcontestproblems',view_func=editcontestview.editcontestproblems, methods = ['POST'])
 app.add_url_rule('/announcements', view_func=announcelistview.announcelist, methods=['GET','POST'])
 app.add_url_rule('/clarifications', view_func=clarificationsview.clarifications, methods=['GET','POST'])
-app.add_url_rule('/admin/editclarifications', view_func=editclarificationsview.editclarifications, methods=['GET','POST'])
 app.add_url_rule('/login', view_func=loginview.login, methods = ['GET', 'POST'])
 app.add_url_rule('/logout', view_func=loginview.logout, methods = ['GET'])
 
