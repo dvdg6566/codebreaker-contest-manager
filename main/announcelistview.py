@@ -37,7 +37,7 @@ def announcelist():
         
         awstools.announcements.createAnnouncement(title=title, text=text)
 
-        flash("Announcement Posted", "success")
+        flash("Announcement Posted!", "success")
 
         return redirect(f'/announcements')
 

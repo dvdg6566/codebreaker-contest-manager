@@ -3,12 +3,6 @@
 {% block head %} {{ super() }} {% endblock %}
 
 {% block content %}
-	<script type="text/javascript" src="{{url_for('static',filename='js/newuser_tour.js')}}"></script>
-		<script>
-				window.onload=function(){
-						tour.start();
-				}
-		</script>
 	<div class="container-fluid">
 		
 		{%if blockpage %}
