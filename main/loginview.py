@@ -16,7 +16,6 @@ def login():
         username = request.form.get("username")
         password = request.form.get("password")
         next_url = request.form.get("next")
-        print(next_url)
 
         response = awstools.cognito.authenticate(username, password)
         
@@ -26,6 +25,7 @@ def login():
 
         flash ('Login Success!', 'success')
         
+        print(username)
         session['username'] = username
         session.permanent = True
 
