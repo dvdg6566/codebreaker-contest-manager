@@ -8,9 +8,9 @@ window.onload = () => {
 	socketBody = {'accountRole': 'admin', 'username': '0rang3'}
 
 	socket.addEventListener('open', e => {
-		console.log('WebSocket is connected')
+		console.log('Websocket Initiated!')
 		socket.send(JSON.stringify(socketBody))
-		console.log("Hi")
+		console.log('Websocket Initiated! (2)')
 	})
 
 	socket.addEventListener('close', e => console.log('WebSocket is closed'))
