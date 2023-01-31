@@ -132,9 +132,8 @@
 			socketBody = {'accountRole': role, 'username': username}
 
 			socket.addEventListener('open', e => {
-				console.log('Websocket Initiated!')
 				socket.send(JSON.stringify(socketBody))
-				console.log('Websocket Initiated! (2)')
+				console.log('Websocket Initiated!')
 			})
 
 			socket.addEventListener('close', e => console.log('WebSocket is closed'))

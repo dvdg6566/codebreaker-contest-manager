@@ -1,29 +1,53 @@
-# Invokes lambda functions to ping websockets
-# If performance degrades, can consider using EC2 side to trigger Step Function
+# Gets list of 
 
 import os
 import json
 import boto3
-lambda_client = boto3.client('lambda')
+from awstools import awshelper
+from boto3.dynamodb.conditions import Key
+
+dynamodb = boto3.resource('dynamodb')
+SFclient = boto3.client('stepfunctions')
 
 judgeName = os.environ.get('JUDGE_NAME')
 accountId = os.environ.get('AWS_ACCOUNT_ID')
 region = os.environ.get('AWS_REGION')
+WEBSOCKET_STEP_FUNCTION_ARN = f'arn:aws:states:{region}:{accountId}:stateMachine:{judgeName}-websocket'
 
-WEBSOCKET_INVOKE_LAMBDA_NAME = f'arn:aws:lambda:{region}:{accountId}:function:{judgeName}-websocket-invoke'
+websocket_table = dynamodb.Table(f'{judgeName}-websocket')
 
 def announce():
 	# Ping all users
-	lambda_input = {'notificationType': 'announce'}
-	res = lambda_client.invoke(FunctionName = WEBSOCKET_INVOKE_LAMBDA_NAME, InvocationType='Event', Payload = json.dumps(lambda_input))
-	print(res)
+	items = awshelper.scan(websocket_table, ProjectionExpression='connectionId')
+	invoke(items,'announce')
 
 def postClarification():
 	# Ping all admins
-	lambda_input = {'notificationType': 'postclarification'}
-	res = lambda_client.invoke(FunctionName = WEBSOCKET_INVOKE_LAMBDA_NAME, InvocationType='Event', Payload = json.dumps(lambda_input))
+	items = websocket_table.query(
+		IndexName = 'accountRoleUsernameIndex',
+		KeyConditionExpression = Key('accountRole').eq('admin'),
+		ProjectionExpression='connectionId'
+	)['Items']
+	invoke(items, 'postClarification')
 
-def answerClarification(username):
+def answerClarification(role, username):
 	# Ping any connection for specified username
-	lambda_input = {'notificationType': 'answerclarification', 'username': username}
-	res = lambda_client.invoke(FunctionName = WEBSOCKET_INVOKE_LAMBDA_NAME, InvocationType='Event', Payload = json.dumps(lambda_input))
+	items = websocket_table.query(
+		IndexName = 'accountRoleUsernameIndex',
+		KeyConditionExpression = Key('accountRole').eq(role) & Key('username').eq(username),
+		ProjectionExpression='connectionId'
+	)['Items']
+	
+	invoke(items, 'answerClarification')
+
+def invoke(items, notificationType):
+	connectionIds = [i['connectionId'] for i in items]
+	# Formats items for step function, grouping items in sets of 100
+	buckets = [connectionIds]
+	# print(buckets)
+	SF_input = json.dumps([{
+		'notificationType': notificationType,
+		'connectionIds': i
+	} for i in buckets])
+	
+	res = SFclient.start_execution(stateMachineArn = WEBSOCKET_STEP_FUNCTION_ARN, input = SF_input)

@@ -33,18 +33,15 @@ def getAllProblemNames():
 
 def getAllProblemsLimited():
     return awshelper.scan(problems_table, 
-        ProjectionExpression = 'problemName, title, #source2, problem_type, noACs, validated',
-        ExpressionAttributeNames={'#source2':'source'}
+        ProjectionExpression = 'problemName, title, problem_type, validated',
     )
 
 def getProblemInfo(problemName):
-    response = problems_table.query(
-        KeyConditionExpression = Key('problemName').eq(problemName)
+    response = problems_table.get_item(
+        Key={ "problemName": problemName }
     )
-    problem_info=response['Items']
-    if len(problem_info) != 1:
-        return None
-    return problem_info[0]
+    if 'Item' not in response.keys(): return None
+    return response['Item']
 
 def updateProblemInfo(problemName, info): 
     problems_table.update_item(
@@ -150,39 +147,6 @@ def getProblemStatementHTML(problemName):
         return {'status': 404, 'response':'No statement is currently available'}
     else:
         return {'status': 200, 'response':statement}
-
-''' BEGIN GRADING '''
-
-# Sends submission to be regraded by Step Function
-def gradeSubmission(problemName,submissionId,username,submissionTime=None,regradeall=False,language='cpp',problemType='Batch'):
-    regrade=True
-
-    # If no submission time already recorded, this is a new submission
-    if submissionTime == None:
-        regrade=False
-        submissionTime = (datetime.now()+timedelta(hours=8)).strftime("%Y-%m-%d %X")
-    
-    # Grader required if problem is not batch
-    grader = (problemType != 'Batch')
-
-    # Stitching takes place for all submissions 
-    stitch = 1
-
-    SF_input = {
-        "problemName": problemName,
-        "submissionId":int(submissionId),
-        "username":username,
-        "submissionTime":submissionTime,
-        "stitch":stitch,
-        "regrade":regrade,
-        "regradeall":regradeall,
-        "language":language, 
-        "grader": grader,
-        "problemType": problemType
-    }
-
-    stepFunctionARN = STEP_FUNCTION_ARN
-    res = SFclient.start_execution(stateMachineArn = stepFunctionARN, input = json.dumps(SF_input))
 
 # REGRADE PROBLEM AS INVOKED IN ADMIN PAGE
 # Regrade type can be NORMAL, AC, NONZERO
