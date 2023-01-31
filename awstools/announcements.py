@@ -5,6 +5,7 @@ from uuid import uuid4
 from datetime import datetime
 
 from awstools import awshelper
+from awstools import websocket
 from boto3.dynamodb.conditions import Key
 
 dynamodb = boto3.resource('dynamodb')
@@ -23,5 +24,6 @@ def createAnnouncement(title, text):
 	info['announcementTime'] = str(datetime.utcnow().strftime("%Y-%m-%d %X"))
 
 	# Trigger AWS Lambda function to activate announcement notification
+	websocket.announce()
 
 	announcements_table.put_item(Item=info)

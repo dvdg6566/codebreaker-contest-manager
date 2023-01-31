@@ -147,15 +147,14 @@
 				data = JSON.parse(e.data)
 				console.log(data)
 				if (data.notificationType === 'announce'){
-					var badge=document.getElementById('admin_badge');
+					var badge=document.getElementById('announce_badge');
 					if(badge!=null){
 						badge.hidden=false;
 						alert("New announcement!");
 					}
 					console.log('Announcement!')
-				}else if (data.notificationType == 'newclarification'){
+				}else if (data.notificationType == 'postclarification'){
 					var badge=document.getElementById('clarification_badge');
-					var badge=document.getElementById('admin_badge');
 					if(badge!=null){
 						badge.hidden=false;
 						alert("New clarification!");
