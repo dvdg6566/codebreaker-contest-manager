@@ -4,7 +4,6 @@ import random
 import flask
 import awstools
 from forms import SubmitForm
-from compilesub import check
 from flask import Flask, render_template, request, url_for, redirect, flash, session, get_flashed_messages, make_response, send_file
 from language import get_languages
 languages = get_languages()

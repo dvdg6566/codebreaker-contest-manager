@@ -4,7 +4,6 @@ import time
 import random
 
 import awstools
-from compilesub import check
 from forms import ResubmitForm
 
 #BEGIN: SUBMISSION -----------------------------------------------------------------------------------------------------------------------------------------------------

@@ -42,8 +42,10 @@ def answerClarification(role, username):
 
 def invoke(items, notificationType):
 	connectionIds = [i['connectionId'] for i in items]
-	# Formats items for step function, grouping items in sets of 100
-	buckets = [connectionIds]
+	# Formats items for step function, grouping items in sets of 100 with list comprehension
+	BLOCK_SIZE = 100
+	buckets = [connectionIds[i: min(i+BLOCK_SIZE, len(connectionIds))] for i in range(0, len(connectionIds), BLOCK_SIZE)]
+
 	# print(buckets)
 	SF_input = json.dumps([{
 		'notificationType': notificationType,

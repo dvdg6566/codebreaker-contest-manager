@@ -3,7 +3,6 @@ from forms import updateProblemForm
 import json
 import awstools
 import subprocess
-import compilesub
 
 def verifyDependency(dependency):
     ranges = dependency.split(',')
