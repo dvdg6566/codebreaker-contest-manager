@@ -13,9 +13,11 @@ import awstools
 app = Flask(__name__)
 
 FLASK_SECRET_KEY = os.environ.get('FLASK_SECRET_KEY')
+API_GATEWAY_LINK = os.environ.get('API_GATEWAY_LINK')
 app.config['SECRET_KEY'] = FLASK_SECRET_KEY
 app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024 * 64
 app.config['SESSION_COOKIE_NAME'] = 'codebreaker-login'
+app.jinja_env.globals['API_GATEWAY_LINK'] = API_GATEWAY_LINK
 
 app.add_url_rule('/', view_func=homeview.home, methods=["GET"])
 app.add_url_rule('/problem/<problemName>', methods=["GET","POST"], view_func=problemview.problem)

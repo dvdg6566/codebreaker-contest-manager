@@ -128,8 +128,8 @@
 		// https://developer.mozilla.org/en-US/docs/Web/API/WebSocket
 
 		window.onload = () => {
-
-			const socket = new WebSocket('wss://ty0j7jyjw1.execute-api.ap-southeast-1.amazonaws.com/production')
+			// use jinja2 global environment variable to pass gateway link to jinja
+			const socket = new WebSocket('{{API_GATEWAY_LINK}}')
 
 			let userinfo = {{userinfo | tojson }}
 			let username = userinfo.username
