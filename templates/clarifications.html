@@ -46,7 +46,7 @@
 				</div>
 				<div class="col-mid-6">
 					{%if userinfo.role == 'member' %}
-						{% if clarification.answer != "" %}
+						{% if clarification.answer%}
 						<b>Answered by <a href="/profile/{{clarification.answeredBy}}">{{clarification.answeredBy}}</a>:</b>
 						<br>
 						{{clarification.answer}}
@@ -54,7 +54,7 @@
 						<b>Unanswered</b>
 						{% endif %}
 					{%elif userinfo.role == 'admin' %}
-						{% if clarification.answer != "" %}
+						{% if clarification.answer%}
 							<b>Answered by <a href="/profile/{{clarification.answeredBy}}">{{clarification.answeredBy}}</a>:</b>
 						{%else%}
 							<b>Unanswered</b>
@@ -73,7 +73,7 @@
 								<input type="hidden" name="askedBy", value='{{clarification.askedBy}}'>
 								<input type="hidden" name="clarification_time", value='{{clarification.clarificationTime}}'>
 								<input type="hidden" name="form_name" value="answerClarification">
-								<input type="submit" value="Update" class="btn btn-secondary">
+								<input type="submit" value="{{'Update' if clarification.answer else 'Answer'}}" class="btn btn-secondary">
 							</div>
 						</form>
 						{%endif%}
