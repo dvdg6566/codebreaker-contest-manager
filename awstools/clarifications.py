@@ -23,10 +23,10 @@ def createClarification(username, problemName, question):
 
 def answerClarification(askedBy, clarificationTime, answer, answeredBy):
 	# askedBy, clarificationTime form composite primary key
-	clarifications_table.update_item(
-		Key = {'clarificationId':clarificationId, 'clarificationTime': clarificationTime},
+	resp = clarifications_table.update_item(
+		Key = {'askedBy':askedBy, 'clarificationTime': clarificationTime},
 		UpdateExpression = f'set answer=:a,answeredBy=:b',
-		ExpressionAttributeValues={':a':info['askedBy'],':b':info['answeredBy']}
+		ExpressionAttributeValues={':a':answer,':b':answeredBy}
 	)
 	# Notify user that clarification has been answered
 

@@ -75,12 +75,11 @@ class newAnnouncementForm(FlaskForm):
     announcement_text = TextAreaField('announcement_text')
     submit = SubmitField('Submit')  
 
-class addClarificationForm(FlaskForm):
+class askClarificationForm(FlaskForm):
     clarification_question = TextAreaField('clarification_question')
     clarification_problem_name = StringField('clarification_problem_name')
     submit = SubmitField('Add Clarification')
 
 class answerClarificationForm(FlaskForm):
-    clarification_id = DecimalField('clarification_id')
-    clarification_answer = StringField('clarification_answer')
+    clarification_answer = SelectField('clarification_answer', choices=['Unanswered', "Yes", "No", "Answered in task description", "No comment", "Investigating", "Invalid question"])
     submit = SubmitField('Answer')
