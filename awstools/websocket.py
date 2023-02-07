@@ -3,6 +3,7 @@
 import os
 import json
 import boto3
+from pprint import pprint
 from awstools import awshelper
 from boto3.dynamodb.conditions import Key
 
@@ -37,7 +38,6 @@ def answerClarification(role, username):
 		KeyConditionExpression = Key('accountRole').eq(role) & Key('username').eq(username),
 		ProjectionExpression='connectionId'
 	)['Items']
-	
 	invoke(items, 'answerClarification')
 
 def invoke(items, notificationType):

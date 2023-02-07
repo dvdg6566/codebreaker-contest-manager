@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 # Gets timezone from environment variables
 TIMEZONE_OFFSET = int(os.environ.get('TIMEZONE_OFFSET'))
 
-def announcelist():
+def announcements():
 	userInfo=awstools.users.getCurrentUserInfo()
 	if userInfo == None: return redirect(url_for("login", next=request.url))
 

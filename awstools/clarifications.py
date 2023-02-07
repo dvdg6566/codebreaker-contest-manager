@@ -2,8 +2,9 @@ import os
 import boto3
 from datetime import datetime
 
-from awstools import awshelper
 from boto3.dynamodb.conditions import Key
+from awstools import awshelper, users, websocket
+
 
 dynamodb = boto3.resource('dynamodb')
 
@@ -19,7 +20,9 @@ def createClarification(username, problemName, question):
 	info['answer'] = ""
 	info['answeredBy'] = ""
 	clarifications_table.put_item(Item=info)
+	
 	# Notify admins of new clarification
+	websocket.postClarification()
 
 def answerClarification(askedBy, clarificationTime, answer, answeredBy):
 	# askedBy, clarificationTime form composite primary key
@@ -28,6 +31,10 @@ def answerClarification(askedBy, clarificationTime, answer, answeredBy):
 		UpdateExpression = f'set answer=:a,answeredBy=:b',
 		ExpressionAttributeValues={':a':answer,':b':answeredBy}
 	)
+
+	askedByUserInfo = users.getUserInfo(askedBy)
+	askedByUserRole = askedByUserInfo['role']
+	websocket.answerClarification(role=askedByUserRole, username=askedBy)
 	# Notify user that clarification has been answered
 
 def getClarificationsByUser(username):

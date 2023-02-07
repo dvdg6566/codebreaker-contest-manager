@@ -6,7 +6,7 @@ import os
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
-from main import submissionview, profileview, submissionlistview, credits, problemview, announcelistview, clarificationsview, homeview, loginview
+from main import submissionview, profileview, submissionlistview, credits, problemview, announcementsview, clarificationsview, homeview, loginview
 from admin import adminview, editproblemlistview, editusersview, editproblemview, editcontestlistview, editcontestview, uploadtestdataview
 import awstools
 
@@ -34,7 +34,7 @@ app.add_url_rule('/admin/editcontests',view_func=editcontestlistview.editcontest
 app.add_url_rule('/admin/editcontesttable', view_func=editcontestlistview.editcontesttable, methods=['POST'])
 app.add_url_rule('/admin/editcontest/<contestId>', view_func = editcontestview.editcontest, methods = ['GET', 'POST'])
 app.add_url_rule('/admin/editcontestproblems',view_func=editcontestview.editcontestproblems, methods = ['POST'])
-app.add_url_rule('/announcements', view_func=announcelistview.announcelist, methods=['GET','POST'])
+app.add_url_rule('/announcements', view_func=announcementsview.announcements, methods=['GET','POST'])
 app.add_url_rule('/clarifications', view_func=clarificationsview.clarifications, methods=['GET','POST'])
 app.add_url_rule('/login', view_func=loginview.login, methods = ['GET', 'POST'])
 app.add_url_rule('/logout', view_func=loginview.logout, methods = ['GET'])

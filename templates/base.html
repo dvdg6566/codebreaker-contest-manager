@@ -54,12 +54,13 @@
 				</li>
 
 				<li class="nav-item">
-					<a class="nav-link" href="/submissions?username={{userinfo['username']}}">My Submissions</a>
-				</li>
-				<li class="nav-item">
 					<a class="nav-link" href="/clarifications">Clarifications
 					<span id="clarification_badge" class="badge badge-secondary badge-danger" hidden="true">!</span>
 					</a>
+				</li>
+
+				<li class="nav-item">
+					<a class="nav-link" href="/submissions?username={{userinfo['username']}}">My Submissions</a>
 				</li>
 
 				<li class="nav-item">
@@ -99,6 +100,8 @@
 			{% endif %}
 			
 		</nav>
+
+		<!-- Displays contents of "flash" operations -->
 	 	
 		<div class="container">
 			{% with messages = get_flashed_messages(with_categories=true) %}
@@ -117,6 +120,9 @@
 
 		{% block content %}{% endblock %}
 	</body>
+
+		<!-- Subscribes to API Gateway websocket after page loads -->
+		<!-- Manages notifications for announcements and clarifications -->
 	<script>
 		// MDN WebSocket documentation
 		// https://developer.mozilla.org/en-US/docs/Web/API/WebSocket
@@ -152,14 +158,14 @@
 						alert("New announcement!");
 					}
 					console.log('Announcement!')
-				}else if (data.notificationType == 'postclarification'){
+				}else if (data.notificationType == 'postClarification'){
 					var badge=document.getElementById('clarification_badge');
 					if(badge!=null){
 						badge.hidden=false;
 						alert("New clarification!");
 					}
 					console.log('Clarification!')
-				}else if (data.notifcationType == 'answeredclarification'){
+				}else if (data.notificationType == 'answerClarification'){
 					var badge=document.getElementById('clarification_badge');
 					if(badge!=null){
 						badge.hidden=false;

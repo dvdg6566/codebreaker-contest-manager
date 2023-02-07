@@ -20,19 +20,17 @@ def getAllUsernames():
 # Get user's information based on username
 # TODO: Gets the contest info too and returns in as part of object
 def getUserInfo(username):
-    response = users_table.query(
-        KeyConditionExpression=Key('username').eq(username)
+    response = users_table.get_item(
+        Key={'username': username}
     )
-    items = response['Items']
-    if len(items) != 0: return items[0]
-    return None
+    if 'Item' not in response.keys(): return None
+    return response['Item']
 
-# Gets information about the currently logged in user based on 
+# Gets information about the currently logged in user based on Flask cookies
 def getCurrentUserInfo():
     if 'username' in dict(session).keys():
-        username =  dict(session)['username']
-        user_info =  getUserInfo(username)
-        return user_info
+        username =  dict(session)['username'] 
+        return getUserInfo(username)
     else:
         return None
 
