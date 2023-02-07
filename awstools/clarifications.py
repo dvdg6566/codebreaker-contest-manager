@@ -11,19 +11,18 @@ judgeName = os.environ.get('JUDGE_NAME')
 clarifications_table = dynamodb.Table(f'{judgeName}-clarifications')
 
 def createClarification(username, problemName, question):
-	clarificationId = getNextClarificationId()
 	info = {}
 	info['askedBy'] = username
+	info['problemName'] = problemName
 	info['question'] = question
 	info['clarificationTime'] = str(datetime.utcnow().strftime("%Y-%m-%d %X"))
-	info['problemName'] = problemName
 	info['answer'] = ""
 	info['answeredBy'] = ""
 	clarifications_table.put_item(Item=info)
 	# Notify admins of new clarification
 
 def answerClarification(askedBy, clarificationTime, answer, answeredBy):
-	# askedBy, clarificationTime form primary key
+	# askedBy, clarificationTime form composite primary key
 	clarifications_table.update_item(
 		Key = {'clarificationId':clarificationId, 'clarificationTime': clarificationTime},
 		UpdateExpression = f'set answer=:a,answeredBy=:b',

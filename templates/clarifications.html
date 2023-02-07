@@ -14,7 +14,7 @@
 			<div class="card-body">
 				<form id="createclarificationform" action="" method="POST" class="form-group" autocomplete="off">
 					<div class="autocomplete input-group mb-2">
-						{{form.clarification_problem_id(id="problemIdInput",placeholder="Problem ID (leave blank for general clarification)",class="form-control mr-1")}}
+						{{form.clarification_problem_name(id="problemIdInput",placeholder="Problem Name (leave blank for general clarification)",class="form-control mr-1")}}
 					</div>
 					{{form.clarification_question(placeholder="Question (please phrase it as a yes/no question)",class="form-control")}}
 					<br>
@@ -28,8 +28,8 @@
 	{% for clarification in clarifications %}
 	<div class="card text-left" style="margin-bottom: -1px; margin-right: 12px;">
 		<div class="card-header bg-white">
-			{% if clarification.problemId != ""%}
-			<b><a href="/problem/{{clarification.problemId}}">{{clarification.problemId}}</a></b> by <a href="/profile/{{clarification.askedBy}}">{{clarification.askedBy}}</a>
+			{% if clarification.problemName != ""%}
+			<b><a href="/problem/{{clarification.problemName}}">{{clarification.problemName}}</a></b> by <a href="/profile/{{clarification.askedBy}}">{{clarification.askedBy}}</a>
 			{% else %}
 			<b>General clarification</b> by <a href="/profile/{{clarification.askedBy}}">{{clarification.askedBy}}</a>
 			{% endif %}
@@ -47,6 +47,19 @@
 					{% else %}
 					<b>Unanswered</b>
 					{% endif %}
+					
+					<form id="answerclarificationform" autocomplete="off" action="" method="POST" class="form-group">
+						<div class="autocomplete input-group mb-2">
+							<select type="select" name="clarification_answer" placeholder="Answer" class="form-control mr-1">
+								<option value=""></option>
+								{% for answer in clarificationAnswers %}
+								<option value="{{answer}}">{{answer}}</option>
+								{% endfor %}
+							</select>
+							<input type="hidden" name="clarification_id", value={{clarification.clarificationId}}>
+							<input type="submit" value="Answer" class="btn btn-secondary" onclick="sendsocket('{{clarification.askedBy}}')">
+						</div>
+					</form>
 				</div>
 			</div>
 		</div>
@@ -54,20 +67,11 @@
 	<br>
 	{% endfor %}
 
-	<script src="{{url_for('static',filename='js/editcontest.js')}}"></script>
+	<script src="{{url_for('static',filename='js/autocomplete.js')}}"></script>
 	<script>
-		var problems = {{problem_names|tojson}}
+		var problems = {{problemNames|tojson}}
 		autocomplete(document.getElementById('problemIdInput'),problems)
 	</script>
-	{% if contest %}
-	<script type="text/javascript">
-		$(document).ready(function(){
-			$('#submitbutton').on('click',function(){
-				socket.send('newclarification');
-			});
-		});
-	</script>
-	{% endif %}
 </div>
 
 {% endblock %}

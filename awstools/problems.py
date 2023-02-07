@@ -28,8 +28,8 @@ def getAllProblems():
     return results 
     
 def getAllProblemNames():
-    problemNames = awshelper.scan(problems_table, ProjectionExpression = 'problemName')
-    return problemNames
+    res = awshelper.scan(problems_table, ProjectionExpression = 'problemName')
+    return [i['problemName'] for i in res]
 
 def getAllProblemsLimited():
     return awshelper.scan(problems_table, 
@@ -50,8 +50,8 @@ def updateProblemInfo(problemName, info):
         ExpressionAttributeValues={':a':info['title'], ':b':info['problem_type'], ':c':info['timeLimit'], ':d':info['memoryLimit'], ':e':info['attachments'], ':f':info['customChecker'], ':g':info['fullFeedback']},
     )
 
-def validateProblem(problemId):
-    lambda_input = {'problemName':problemId}
+def validateProblem(problemName):
+    lambda_input = {'problemName':problemName}
     res = lambda_client.invoke(FunctionName = PROBLEM_VALIDATION_LAMBDA_NAME, InvocationType='RequestResponse', Payload = json.dumps(lambda_input))
     return res
 

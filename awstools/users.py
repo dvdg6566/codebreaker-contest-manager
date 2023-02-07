@@ -47,15 +47,6 @@ def createUser(username, email, role='member', fullname=''):
         'contest': ''
     }
     users_table.put_item(Item = newUserInfo)
-    return getUserInfo(email)
-
-# Updates user's info
-def updateUserInfo(email, username, fullname, school, theme, hue, nation):
-    users_table.update_item(
-        Key = {'email' : email},
-        UpdateExpression = f'set username =:u, fullname=:f, school =:s, theme =:t, hue=:h, nation=:n',
-        ExpressionAttributeValues={':u' : username, ':f' : fullname, ':s' : school, ':t' : theme, ':h':hue, ':n': nation}
-    )
 
 def judgeAccess(userInfo):
     if userInfo['role'] == 'admin':

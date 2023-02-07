@@ -53,4 +53,4 @@ if __name__ == '__main__':
     # awstools.websocket.announce()
     # awstools.websocket.answerClarification(role='admin',username='0rang4')
 
-    # awstools.cognito.createUser('sgzoo2', 'singaporezoo060@gmail.com', 'admin')
+    # awstools.cognito.createUser('sgzoo2', 'singaporezoo060@gmail.com', 'member')

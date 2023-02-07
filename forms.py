@@ -34,7 +34,6 @@ class searchSubmissionForm(FlaskForm):
 class updateProblemForm(FlaskForm):
     problem_title = StringField('problem_title')
     problem_type = SelectField('problem_type')
-    contest_link = StringField('contest_link')
     time_limit = DecimalField('time_limit')
     memory_limit = IntegerField('memory_limit')
     feedback = BooleanField('feedback')
@@ -44,8 +43,6 @@ class updateProblemForm(FlaskForm):
     submit = SubmitField('Update')
     nameA = StringField('nameA')
     nameB = StringField('nameB')
-    ee = BooleanField('ee')
-    public_statement = BooleanField('public_statement')
 
 class addProblemForm(FlaskForm):
     problem_id = StringField('problem_id')
@@ -73,20 +70,14 @@ class updateContestForm(FlaskForm):
     contest_sub_delay = DecimalField('sub_delay')
     submit = SubmitField('Update')
 
-class updateContestGroupForm(FlaskForm):
-    contest_group_name = StringField('contest_group_name')
-    contest_group_description = TextAreaField('contest_group_description')
-    contest_group_visible = BooleanField('contest_group_visible')
-    submit = SubmitField('Update')
-
 class newAnnouncementForm(FlaskForm):
     announcement_title = StringField('announcement_title')
     announcement_text = TextAreaField('announcement_text')
-    submit = SubmitField('Submit')
+    submit = SubmitField('Submit')  
 
 class addClarificationForm(FlaskForm):
     clarification_question = TextAreaField('clarification_question')
-    clarification_problem_id = StringField('clarification_problem_id')
+    clarification_problem_name = StringField('clarification_problem_name')
     submit = SubmitField('Add Clarification')
 
 class answerClarificationForm(FlaskForm):
