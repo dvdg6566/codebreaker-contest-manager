@@ -6,6 +6,7 @@ from awstools import awshelper
 from boto3.dynamodb.conditions import Key
 
 judgeName = os.environ.get('JUDGE_NAME')
+judgeName = 'codebreakercontest'
 dynamodb = boto3.resource('dynamodb')
 users_table = dynamodb.Table(f'{judgeName}-users')
 

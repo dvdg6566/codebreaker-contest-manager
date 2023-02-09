@@ -52,7 +52,3 @@ app.add_url_rule("/common/<path:path>", view_func=cppref2)
 ''' END CPP REFERENCE '''
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
-    # awstools.websocket.announce()
-    # awstools.websocket.answerClarification(role='admin',username='0rang4')
-
-    # awstools.cognito.createUser('sgzoo2', 'singaporezoo060@gmail.com', 'member')
