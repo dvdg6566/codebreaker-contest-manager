@@ -11,28 +11,28 @@
 	<br>
 	<!-- Post New Announcement -->
 	{% if userinfo.role == 'admin' %}
-		<p>
-			<button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
-				Post New Announcement (Admin Only)
-			</button>
-		</p>
-		<div class="collapse" id="collapseExample">
-			<div class="card card-body">
-				<form id="newannouncement" action="" method="POST" class="form-group" onSubmit="return confirm('Are you sure you want to post new announcement and notify all contestants?');">
-					<div class="input-group mb-3">
-						<!-- Input for title -->
-						<div class="input-group-prepend">
-							<span class="input-group-text">Title</span>
-						</div>
-						{{form.announcement_title(type='text', placeholder='Announcement Title', class='form-control')}}
-					</div>
-					<!-- Input for text -->
-					<p>{{form.announcement_text(placeholder='Announcement Text', class='form-control')}}</p>
 
-					{{form.submit(type='submit', id='submitbutton', class='btn btn-secondary')}}
-				</form>
+		<div class="card text-left" style="margin-bottom: -1px; margin-right: 12px;">
+			<div class="card-header bg-white" data-toggle="collapse" data-target="#makeAnnouncement"><b>New Announcement</b></div>
+			<div class="collapse" id="makeAnnouncement">
+				<div class="card card-body">
+					<form id="newannouncement" action="" method="POST" class="form-group" onSubmit="return confirm('Are you sure you want to post new announcement and notify all contestants?');">
+						<div class="input-group mb-3">
+							<!-- Input for title -->
+							<div class="input-group-prepend">
+								<span class="input-group-text">Title</span>
+							</div>
+							{{form.announcement_title(type='text', placeholder='Announcement Title', class='form-control')}}
+						</div>
+						<!-- Input for text -->
+						<p>{{form.announcement_text(placeholder='Announcement Text', class='form-control')}}</p>
+
+						{{form.submit(type='submit', id='submitbutton', class='btn btn-secondary')}}
+					</form>
+				</div>
 			</div>
 		</div>
+
 		<hr>
 		<br>
 	{%endif%}

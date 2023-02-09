@@ -33,21 +33,18 @@ def editUserRole():
     return {'status':200,'error':''}
 
 def editusers():
-    users = awstools.getAllUsers()
-    userInfo = awstools.getCurrentUserInfo()
-
-    if userInfo == None or (userInfo['role'] != 'admin' and userInfo['role'] != 'superadmin'):
-        flash("Admin access is required", "warning")
+    userInfo=awstools.users.getCurrentUserInfo()
+    if userInfo == None: return redirect(url_for("login", next=request.url))
+    if userInfo['role'] != 'admin': 
+        flash("Admin access required!", "warning")
         return redirect("/")
 
-    if contestmode.contest() and (userInfo['role'] != 'superadmin' and userInfo['username'] not in contestmode.allowedusers()):
-        flash("You do not have access in contest mode", "warning")
-        return redirect("/")
+    allUsersInfo = awstools.users.getAllUsers()
+    print(allUsersInfo)
+    # allUsersInfo = [dict((key,value) for key, value in U.items() if key in ['username','fullname','school','role', 'nation']) for U in users] #impt info goes into the list (key in [list]) 
+    # allUsersInfo = [user for user in allUsersInfo if 'fullname' in user.keys()]
+    # allUsersInfo = [user for user in allUsersInfo if user['fullname'] != "" and user['username'] != ""]
+    # allUsersInfo.sort(key=lambda x:x['fullname'])
 
-    allUsersInfo = [dict((key,value) for key, value in U.items() if key in ['username','fullname','school','role', 'nation']) for U in users] #impt info goes into the list (key in [list]) 
-    allUsersInfo = [user for user in allUsersInfo if 'fullname' in user.keys()]
-    allUsersInfo = [user for user in allUsersInfo if user['fullname'] != "" and user['username'] != ""]
-    allUsersInfo.sort(key=lambda x:x['fullname'])
-
-    return render_template('editusers.html',allusersinfo=allUsersInfo,userinfo=userInfo, socket=contestmode.socket())
+    return render_template('editusers.html',userinfo=userInfo,allusersinfo=allUsersInfo)
 

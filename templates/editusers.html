@@ -9,16 +9,19 @@
 <div class="container">
 	<h1> Edit Users </h1>
 
-	<input type="text" id="myInput" onkeyup="myFunction()" class="form-control mb-3" placeholder="Search for users..." title="Type in a name">
+	<!-- <input type="submit"  -->
 
 	<table class="table table-sm table-hover" id="myTable">
 		<thead class="sortable thead-dark">
 			<tr>
+				<th scope="col">Check</th>
 				<th scope="col">Username</th>
 				<th scope="col">Full Name</th>
 				<th scope="col">Role</th>
-				<th scope="col">School</th>
-				<th scope="col">Country</th>
+				<th scope="col">Email</th>
+				<th scope="col">Contest</th>
+				<th scope="col">Group</th>
+				<th scope="col">Actions</th>
 			</tr>
 			</thead>
 			
@@ -26,89 +29,45 @@
 
 			{% for user in allusersinfo%}
 				<tr>
-				<td scope="row"><a href="/profile/{{user.username}}">{{user.username}}</a></td>
-
+				<td><input type="checkbox" /></td>
+				<td scope="row"><a href="/profile/{{user.username}}">{{user.username}}</a> </td>
 				<td>{{user.fullname}}</td>
-
-				{% if userinfo.role == 'superadmin' and user.role == 'admin' %}
+				<td> {{user.role}} </td>
+				<td> {{user.email}} </td>
+				<td>{{user.contest}}</td>
+				<td> {{user.group}} </td>
 				<td>
-				<select onfocus="this.oldvalue=this.value;"onchange="updateRole(this);this.oldvalue=this.value;">
-					<option value="admin">admin</option>
-					<option value="disabled">disabled</option>
-					<option value="locked">locked</option>
-					<option value="member">member</option>
-				</select>
-				</td>
-				{% elif user.role == "admin" or user.role == "superadmin" %}
-				<td><b>{{user.role}}</b></td>
-				{% elif user.role=="member"%}
-				<td>
-				<select onfocus="this.oldvalue=this.value;"onchange="updateRole(this);this.oldvalue=this.value;">
-					<option value="member">member</option>
-					<option value="admin">admin</option>
-					<option value="disabled">disabled</option>
-					<option value="locked">locked</option>
-				</select>
-				</td>
-				{% elif user.role=="disabled"%}
-				<td>
-				<select onfocus="this.oldvalue=this.value;"onchange="updateRole(this);this.oldvalue=this.value;">
-					<option value="disabled">disabled</option>
-					<option value="admin">admin</option>
-					<option value="locked">locked</option>
-					<option value="member">member</option>
-				</select>
-				</td>
-				{%else%}
-				<td>
-				<select onfocus="this.oldvalue=this.value;"onchange="updateRole(this);this.oldvalue=this.value;">
-					<option value="locked">locked</option>
-					<option value="admin">admin</option>
-					<option value="disabled">disabled</option>
-					<option value="member">member</option>
-				</select>
-				</td>
-
-				{%endif%}
-				
-				<td>{{user.school}}</td>
-				<td> {{user.nation}} </td>
+	        <button class="edit-btn">Edit</button>
+	        <button class="save-btn">Save</button>
+	      </td>
 			{% endfor %}
 		</tbody>
 	</table>
 </div>
-	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1rjquery.min.js"></script>
-	<script src={{url_for('static',filename='js/editusers.js')}}> </script>
+	<!-- Makes table sortable -->
+	<script src={{url_for('static',filename='js/sortable.js')}}> </script>
 	<script>
-	function updateRole(item){
-		//console.log(docClient)
-		value = item.options[item.selectedIndex].value
-		//oldvalue = item.oldvalue
-		//console.log({'value':value,'oldvalue':oldvalue})i
-		username = item.parentElement.parentElement.children[0].children[0].text
-		var upd = window.confirm("Are you sure you want to update " + username + "'s role to " + value + "?")
-		if (upd){
-			params = {
-				'username':username,
-				'newrole':value
-			}
-			//console.log(params)
-			$.post('/admin/edituserrole',params).done((response) => {
-				if (response.status !== 200){
-					alert(response.error)
-				}
-			})	
-		}
-		else{
-			item.value = item.oldvalue
-		}
-	}
+    let lastChecked;
 
+	  const checkboxes = document.querySelectorAll("input[type='checkbox']");
+	  for (const checkbox of checkboxes) {
+	    checkbox.addEventListener("click", function(e) {
+	      if (e.shiftKey && lastChecked) {
+	        let inBetween = false;
+	        // Basically inBetween will be on if either of lastChecked or current chekcbox has been passed
+	        for (const c of checkboxes) {
+	          if (c === lastChecked || c === this) {
+	            inBetween = !inBetween;
+	          }
+
+	          if (inBetween) {
+	            c.checked = true;
+	          }
+	        }
+	      }
+
+	      lastChecked = this;
+	    });
+  }
 	</script>
 {% endblock %}
-
-
-
-
-
-

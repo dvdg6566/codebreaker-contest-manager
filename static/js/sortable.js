@@ -1,32 +1,3 @@
-function myFunction() {
-  var input, filter, table, tr, td, i, txtValue;
-  input = document.getElementById("myInput");
-  filter = input.value.toUpperCase();
-  table = document.getElementById("myTable");
-  tr = table.getElementsByTagName("tr");
-  for (i = 1; i < tr.length; i++) { 
-    ok = 0;
-    for (j=0;j<4;j++){
-    td = tr[i].getElementsByTagName("td")[j];
-    if (td) {
-      txtValue = td.textContent || td.innerText;
-	    if(j==2 && txtValue.length > 20){
-	// role
-	txtValue=txtValue.slice(0,20)
-      }
-      if (txtValue.toUpperCase().indexOf(filter) > -1) {
-	  ok = 1;
-	}
-      }
-    }
-    if(!ok){
-	tr[i].style.display="none";
-    }else{
-	tr[i].style.display="";
-    }
-  }
-}
-// IDK if this works but hopefully this will get executed on start
 // Query the table
 const table = document.getElementById("myTable");
 

@@ -124,57 +124,57 @@
 		<!-- Subscribes to API Gateway websocket after page loads -->
 		<!-- Manages notifications for announcements and clarifications -->
 	<script>
-		// MDN WebSocket documentation
-		// https://developer.mozilla.org/en-US/docs/Web/API/WebSocket
+	// MDN WebSocket documentation
+	// https://developer.mozilla.org/en-US/docs/Web/API/WebSocket
 
-		window.onload = () => {
-			// use jinja2 global environment variable to pass gateway link to jinja
-			const socket = new WebSocket('{{API_GATEWAY_LINK}}')
+	window.onload = () => {
+		// use jinja2 global environment variable to pass gateway link to jinja
+		const socket = new WebSocket('{{API_GATEWAY_LINK}}')
 
-			let userinfo = {{userinfo | tojson }}
-			let username = userinfo.username
-			let role = userinfo.role
+		let userinfo = {{userinfo | tojson }}
+		let username = userinfo.username
+		let role = userinfo.role
 
-			socketBody = {'accountRole': role, 'username': username}
+		socketBody = {'accountRole': role, 'username': username}
 
-			socket.addEventListener('open', e => {
-				socket.send(JSON.stringify(socketBody))
-				console.log('Websocket Initiated!')
-			})
+		socket.addEventListener('open', e => {
+			socket.send(JSON.stringify(socketBody))
+			console.log('Websocket Initiated!')
+		})
 
-			socket.addEventListener('close', e => console.log('WebSocket is closed'))
+		socket.addEventListener('close', e => console.log('WebSocket is closed'))
 
-			socket.addEventListener('error', e => console.error('WebSocket is in error', e))
+		socket.addEventListener('error', e => console.error('WebSocket is in error', e))
 
-			socket.addEventListener('message', e => {
-				// Web socket received message
-				// HTML element for badge allows for display of red exclamaiton mark to direct user to announcement/clarification pages
-				data = JSON.parse(e.data)
-				console.log(data)
-				if (data.notificationType === 'announce'){
-					var badge=document.getElementById('announce_badge');
-					if(badge!=null){
-						badge.hidden=false;
-						alert("New announcement!");
-					}
-					console.log('Announcement!')
-				}else if (data.notificationType == 'postClarification'){
-					var badge=document.getElementById('clarification_badge');
-					if(badge!=null){
-						badge.hidden=false;
-						alert("New clarification!");
-					}
-					console.log('Clarification!')
-				}else if (data.notificationType == 'answerClarification'){
-					var badge=document.getElementById('clarification_badge');
-					if(badge!=null){
-						badge.hidden=false;
-						alert("Your clarification has been answered!");
-					}
-				}else{
-					console.log('WebSocket Error')
+		socket.addEventListener('message', e => {
+			// Web socket received message
+			// HTML element for badge allows for display of red exclamaiton mark to direct user to announcement/clarification pages
+			data = JSON.parse(e.data)
+			console.log(data)
+			if (data.notificationType === 'announce'){
+				var badge=document.getElementById('announce_badge');
+				if(badge!=null){
+					badge.hidden=false;
+					alert("New announcement!");
 				}
-			})
-		}
+				console.log('Announcement!')
+			}else if (data.notificationType == 'postClarification'){
+				var badge=document.getElementById('clarification_badge');
+				if(badge!=null){
+					badge.hidden=false;
+					alert("New clarification!");
+				}
+				console.log('Clarification!')
+			}else if (data.notificationType == 'answerClarification'){
+				var badge=document.getElementById('clarification_badge');
+				if(badge!=null){
+					badge.hidden=false;
+					alert("Your clarification has been answered!");
+				}
+			}else{
+				console.log('WebSocket Error')
+			}
+		})
+	}
 	</script>
 </html>

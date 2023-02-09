@@ -43,11 +43,6 @@
 					<a class="nav-link" href="/admin/editproblems">Problems</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" href="/admin/editclarifications">Clarifications
-						<span id="clarification_badge" class="badge badge-secondary badge-danger" hidden="true">!</span>
-					</a>
-				</li>
-				<li class="nav-item">
 					<a class="nav-link" href="/">Home
 					<span id="home_badge" class="badge badge-secondary badge-danger" hidden="true">!</span>
 					</a>
@@ -56,5 +51,50 @@
 		</nav>
 		{% block content %}{% endblock %}
 	</body>
+
+		<!-- Subscribes to API Gateway websocket after page loads -->
+		<!-- Manages notifications for announcements and clarifications -->
+	<script>
+	// MDN WebSocket documentation
+	// https://developer.mozilla.org/en-US/docs/Web/API/WebSocket
+
+	window.onload = () => {
+		// use jinja2 global environment variable to pass gateway link to jinja
+		const socket = new WebSocket('{{API_GATEWAY_LINK}}')
+
+		let userinfo = {{userinfo | tojson }}
+		let username = userinfo.username
+		let role = userinfo.role
+
+		socketBody = {'accountRole': role, 'username': username}
+
+		socket.addEventListener('open', e => {
+			socket.send(JSON.stringify(socketBody))
+			console.log('Websocket Initiated!')
+		})
+
+		socket.addEventListener('close', e => console.log('WebSocket is closed'))
+
+		socket.addEventListener('error', e => console.error('WebSocket is in error', e))
+
+		socket.addEventListener('message', e => {
+			// Web socket received message
+			// HTML element for badge allows for display of red exclamaiton mark to direct user to announcement/clarification pages
+			data = JSON.parse(e.data)
+			console.log(data)
+			var badge=document.getElementById('home_badge');
+			badge.hidden=false;
+			if (data.notificationType === 'announce'){
+				alert("New announcement!");
+			}else if (data.notificationType == 'postClarification'){
+				alert("New clarification!");
+			}else if (data.notificationType == 'answerClarification'){
+				alert("Your clarification has been answered!");
+			}else{
+				console.log('WebSocket Error')
+			}
+		})
+	}
+	</script>
 </html>
 
