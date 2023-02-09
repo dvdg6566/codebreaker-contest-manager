@@ -14,10 +14,18 @@ def getAllContestIds():
 	return [i['contestId'] for i in contestIds]
 
 def getAllContestInfo():
-	return awshelper.scan(contests_table,
-		# ProjectionExpression = 'contestId, contestName, startTime, endTime, #u',
-		ExpressionAttributeNames={'#u':'users' } # not direct cause users is a reserved word
-	)
+	return awshelper.scan(contests_table)
+
+# gets all start times when adding users into contests
+def getAllContestTimes():
+    contestsInfo = getAllContestInfo()
+    contestTimes = {}
+    for contest in contestsInfo:
+        contestTimes[contest['contestId']] = {
+        	'startTime': datetime.strptime(contest['startTime'], "%Y-%m-%d %X"),
+        	'endTime': datetime.strptime(contest['endTime'], "%Y-%m-%d %X")
+       	}
+    return contestTimes
 
 def getContestInfo(contestId):
 	response = contests_table.query(

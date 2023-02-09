@@ -66,3 +66,25 @@ def scan(table, ProjectionExpression=None, ExpressionAttributeNames = None, Expr
             )
             results = results + resp['Items']
     return results
+
+# helper function for batch get items: 
+# If you request more than 100 items, BatchGetItem returns a ValidationException with the message "Too many items requested for the BatchGetItem call."
+# From https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/dynamodb.html#DynamoDB.Client.batch_get_item
+def batchGetItems (tableName, items, primaryKeyName):
+    keys = [{primaryKeyName: i} for i in items]
+    # Buckets keys into blocks of size 100
+    BLOCK_SIZE = 100
+    buckets = [keys[i: i+BLOCK_SIZE] for i in range(0, len(keys), BLOCK_SIZE)]
+
+    results = []
+    for bucket in buckets:
+        response = dynamodb.batch_get_item( 
+            RequestItems = { 
+                tableName: { 
+                    'Keys': bucket
+                }
+            }
+        )['Responses'][tableName] 
+        results += response
+
+    return results

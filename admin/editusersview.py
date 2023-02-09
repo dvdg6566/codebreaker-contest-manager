@@ -1,36 +1,29 @@
 import awstools
 from flask import Flask, render_template, request, url_for, redirect, flash, session, get_flashed_messages, make_response, send_file
 
-def editUserRole():
-    username = request.form['username']
-    newrole = request.form['newrole']
-    #print(username,newrole)
-    userInfo = awstools.getCurrentUserInfo()
+def editUserTable():
+    userInfo = awstools.users.getCurrentUserInfo()
 
-    if userInfo == None:
+    if userInfo == None or userInfo['role'] != 'admin':
         return {'status':300,'error':'Access to resource denied'}
 
-    if userInfo['role'] != 'admin' and userInfo['role'] != 'superadmin':
-        return {'status':300,'error':'Access to resource denied'}
+    operation = request.form['operation']
+    # Adding users to contest
+    if operation == 'ADD_USERS_TO_CONTEST':
+        contestUsers = request.form['operation']
+        contestId = request.form['operation']
 
-    if newrole not in ['locked', 'disabled', 'member', 'admin']:
-        return {'status':301,'error':'Invalid role provided'}
+        contestIds = awstools.contests.getAllContestIds()
+        usernames = awstools.users.getAllUsernames()
+        if contestId not in contestIds: return {'status':300, 'error': 'Invalid contestId!'}
+        for user in contestUsers:
+            if user not in usernames: return {'status':300, 'error': 'Invalid username!'}
 
-    if userInfo['username'] == username:
-        return {'status':302,'error':'Cannot change your own role!'}
-
-    changedUserInfo = awstools.getUserInfoFromUsername(username)
-    if changedUserInfo['role'] == 'superadmin':
-        return {'status':304,'error':'Cannot de-admin another admin without superadmin privileges!'}
-
-    if changedUserInfo['email'] == None:
-        return {'status':303,'error':'User does not exist!'}
-    
-    if userInfo['role'] != 'superadmin' and changedUserInfo['role'] == 'admin' and newrole != 'admin':
-        return {'status':304,'error':'Cannot de-admin another admin without superadmin privileges!'}
-    
-    awstools.editUserRole(changedUserInfo,newrole,userInfo)
-    return {'status':200,'error':''}
+        resp = awstools.user.updateContest(usernames=contestUsers, contestId=contestId)
+    elif operation == 'EDIT_USER':
+        pass
+    else:
+        return {'status':300, 'error': 'Invalid operation!'}
 
 def editusers():
     userInfo=awstools.users.getCurrentUserInfo()

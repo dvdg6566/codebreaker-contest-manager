@@ -94,22 +94,30 @@
 		addUsers = () => {
 			let usernames = [] // users to add into contest
 			let contestId = $('#contest_id').val()
+
+			if (!contestIds.include(contestId)){
+				alert('Invalid Contest Id!')
+				return
+			}
+
 			let tableRows = $('#myTable > tbody > tr')
 			tableRows.each((i) => {
 				let row = tableRows[i];
 				let checked = row.children[0].children[0].checked
 				let username = row.children[1].children[0].text
 				if (checked){usernames.push(username)}
-					params = {
-						'operation': 'ADD_USERS_TO_CONTEST',
-						'usernames': usernames,
-						'contestId': contestId
-					}
-					$.post('/admin/editusers',params).done((response) => {
-						if (response.status !== 200){
-							alert(response.error)
-						}
-					})
+			})
+			params = {
+				'operation': 'ADD_USERS_TO_CONTEST',
+				'usernames': usernames,
+				'contestId': contestId
+			}
+			$.post('/admin/editusertable',params).done((response) => {
+				if (response.status !== 200){
+					alert(response.error)
+				}else{
+					alert('Success!')
+				}
 			})
 		}
 	</script>

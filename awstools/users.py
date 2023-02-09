@@ -2,7 +2,8 @@
 import os
 import boto3
 from flask import session
-from awstools import awshelper
+from datetime import datetime
+from awstools import awshelper, contests
 from boto3.dynamodb.conditions import Key
 
 judgeName = os.environ.get('JUDGE_NAME')
@@ -45,6 +46,31 @@ def createUser(username, role, email='', fullname=''):
         'contest': ''
     }
     users_table.put_item(Item = newUserInfo)
+
+# Sets all the users to have contestId
+# Returns an error if any of the users have already participated in contest
+def setContest(usernames, contestId):
+    contestTimes = contests.getAllContestTimes()
+    curtime = datetime.utcnow()
+    print(contestTimes)
+
+    usersInfo = awshelper.batchGetItems(f'{judgeName}-users', usernames, 'username')
+    failUsers = [] # Users that can't be updated
+    for user in usersInfo:
+        fail = 0
+        if user['contest']:
+            if contestId in contestTimes and contestTimes[contestId]['endTime'] < curtime: 
+                fail = 1
+        if fail: 
+            failUsers.append(user['username'])
+        else:
+            users_table.update_item(
+                Key = {'username': user['username']},
+                UpdateExpression = f'set #a=:a',
+                ExpressionAttributeNames = {'#a': 'contest'},
+                ExpressionAttributeValues = {':a': contestId}
+            )
+    print(failUsers)
 
 def judgeAccess(userInfo):
     if userInfo['role'] == 'admin':
