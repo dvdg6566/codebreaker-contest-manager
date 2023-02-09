@@ -9,12 +9,24 @@
 <div class="container">
 	<h1> Edit Users </h1>
 
-	<!-- <input type="submit"  -->
+	<div class="card text-left" style="margin-bottom: -1px; margin-right: 12px;">
+		<div class="card-header bg-white" data-toggle="collapse" data-target="#manageUsers"><b>Manage Users</b></div>
+		<div id="manageUsers" class="collapse" style="">
+			<div class="card-body" >
+				<div>
+					<input class="form-control" id="contest_id" name="contest_id" placeholder="Contest Id" type="text" value="">
+				</div>
+				<br>
+				<input class="btn btn-secondary" id="submitbutton" name="submit" type="submit" value="Add Users to Contest" onclick="addUsers()">
+			</div>
+		</div>
+	</div>
+	<hr><br>
 
 	<table class="table table-sm table-hover" id="myTable">
 		<thead class="sortable thead-dark">
 			<tr>
-				<th scope="col">Check</th>
+				<th scope="col">Select</th>
 				<th scope="col">Username</th>
 				<th scope="col">Full Name</th>
 				<th scope="col">Role</th>
@@ -46,6 +58,13 @@
 </div>
 	<!-- Makes table sortable -->
 	<script src={{url_for('static',filename='js/sortable.js')}}> </script>
+	<!-- Autocomplete for contestId -->
+	<script src="{{url_for('static',filename='js/autocomplete.js')}}"></script>
+	<script>
+		var contestIds = {{contestIds|tojson}}
+		autocomplete(document.getElementById('contest_id'),contestIds)
+	</script>
+	<!-- Allows selecting multiple contests at once -->
 	<script>
     let lastChecked;
 
@@ -69,5 +88,29 @@
 	      lastChecked = this;
 	    });
   }
+	</script>
+	<!-- Adds users to contest when button is clicked -->
+	<script>
+		addUsers = () => {
+			let usernames = [] // users to add into contest
+			let contestId = $('#contest_id').val()
+			let tableRows = $('#myTable > tbody > tr')
+			tableRows.each((i) => {
+				let row = tableRows[i];
+				let checked = row.children[0].children[0].checked
+				let username = row.children[1].children[0].text
+				if (checked){usernames.push(username)}
+					params = {
+						'operation': 'ADD_USERS_TO_CONTEST',
+						'usernames': usernames,
+						'contestId': contestId
+					}
+					$.post('/admin/editusers',params).done((response) => {
+						if (response.status !== 200){
+							alert(response.error)
+						}
+					})
+			})
+		}
 	</script>
 {% endblock %}

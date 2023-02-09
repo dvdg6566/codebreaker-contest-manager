@@ -5,9 +5,6 @@ from flask import session
 from awstools import awshelper
 from boto3.dynamodb.conditions import Key
 
-from dotenv import load_dotenv, find_dotenv
-load_dotenv(find_dotenv())
-
 judgeName = os.environ.get('JUDGE_NAME')
 dynamodb = boto3.resource('dynamodb')
 users_table = dynamodb.Table(f'{judgeName}-users')

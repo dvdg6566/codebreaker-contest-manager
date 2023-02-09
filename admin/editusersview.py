@@ -40,11 +40,12 @@ def editusers():
         return redirect("/")
 
     allUsersInfo = awstools.users.getAllUsers()
-    print(allUsersInfo)
+    
+    contestIds = awstools.contests.getAllContestIds()
     # allUsersInfo = [dict((key,value) for key, value in U.items() if key in ['username','fullname','school','role', 'nation']) for U in users] #impt info goes into the list (key in [list]) 
     # allUsersInfo = [user for user in allUsersInfo if 'fullname' in user.keys()]
     # allUsersInfo = [user for user in allUsersInfo if user['fullname'] != "" and user['username'] != ""]
     # allUsersInfo.sort(key=lambda x:x['fullname'])
 
-    return render_template('editusers.html',userinfo=userInfo,allusersinfo=allUsersInfo)
+    return render_template('editusers.html',userinfo=userInfo,allusersinfo=allUsersInfo,contestIds=contestIds)
 

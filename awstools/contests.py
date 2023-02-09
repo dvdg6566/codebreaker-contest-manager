@@ -11,7 +11,7 @@ contests_table = dynamodb.Table(f'{judgeName}-contests')
 
 def getAllContestIds():
 	contestIds = awshelper.scan(contests_table, ProjectionExpression='contestId')
-	return contestIds
+	return [i['contestId'] for i in contestIds]
 
 def getAllContestInfo():
 	return awshelper.scan(contests_table,

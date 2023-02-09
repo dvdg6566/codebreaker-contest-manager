@@ -6,9 +6,6 @@ import secrets
 from awstools import users
 from botocore.exceptions import ClientError
 
-from dotenv import load_dotenv, find_dotenv
-load_dotenv(find_dotenv())
-
 userPoolId = os.environ.get('COGNITO_USER_POOL_ID')
 clientId = os.environ.get('COGNITO_CLIENT_ID')
 client = boto3.client('cognito-idp')
