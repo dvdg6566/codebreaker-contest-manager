@@ -39,20 +39,20 @@
 			<table class="table table-hover">
 			  <thead class="thead-dark">
 			    <tr>
-			      <th scope="col">Contest Id</th>
+			      <th scope="col">Contest Name</th>
 			      <th scope="col">Problems </th>
-			      <th scope="col">Name</th>
-			      <th scope="col">Description</th>
+			      <th scope="col">Participants</th>
 			      <th scope="col">Start Time</th>
 			      <th scope="col">End Time</th>
 			      <th scope="col">Duration</th>
+			      <th scope="col">Limits</th>
 			      <th scope="col">Actions</th>
 			    </tr>
 			  </thead>
 			  <tbody>
 			  	{% for contest in contestsInfo %}
 			    <tr>
-			      <td><a href="{{url_for('editcontest', contestId=contest.contestId)}}">{{contest.contestId}}</a></td>
+			      <td><a class="contestlink" href="{{url_for('editcontest', contestId=contest.contestId)}}">{{contest.contestName}}</a></td>
 			      <td>
 			      	<p>
 							{%for problem in contest.problems %}
@@ -61,13 +61,24 @@
 							{%endfor%}
 			      	</p>
 			      </td>
-			      <td class="editable">{{contest.contestName}}</td>
-			      <td class="editable">{{contest.description}}</td>
+			      <td>
+			      	<p>
+							{%for username in contest.users %}
+							<a href="{{url_for('profile',username=username)}}"> {{username}} </a>
+							<br>
+							{%endfor%}
+			      	</p>
+			      </td>
 			      <td class="editable dt"><tt>{{contest.startTime}}</tt></td>
 			      <td class="editable dt"><tt>{{contest.endTime}}</tt></td>
 			      <td class="dur"><tt>{{contest.duration}}</tt></td>
 			      <td>
-			        <button class="edit-btn">Edit</button>
+			      	{{contest.subLimit}} submissions
+			      	<br>
+			      	{{contest.subDelay}}s Delay
+			      </td>
+			      <td>
+			        <button class="edit-btn">Edit Dates</button>
 			        <button class="save-btn">Save</button>
 			      </td>
 			    </tr>
@@ -86,7 +97,7 @@
 			});
 
 			$(".save-btn").click(function(){
-			  var row = $(this).closest("tr");
+			 	var row = $(this).closest("tr");
 				
 				// gets the values from rows
 				var row = $(this).closest("tr")
@@ -96,8 +107,9 @@
 				  }).get();
 				}).get();
 
-				rowvalues.pop(); // remove buttons from row
-				rowvalues.splice(1,1); // remove the problem list
+				// Get the contestId from the link to contest
+				var url = row.find(".contestlink")[0].href;
+				var contestId = url.split("/").pop();
 
 				var startTime = new Date(rowvalues[3]);
 				var endTime = new Date(rowvalues[4]);
@@ -106,31 +118,38 @@
 					alert("Invalid Time!")
 					return;
 				}else if (startTime > endTime){
-					alert("Invalid Duration!")
+					alert("Start Time cannot be before End Time!")
 					return;
 				}
 
 				// update valid time
 				let duration = endTime - startTime;
-				let hhmmssFormat = new Date(duration).toISOString().substr(11, 8);
+				let dateObj = new Date(duration);
+				let hhmmssFormat = dateObj.toISOString().substr(11, 8);
+				let days = Math.floor(dateObj.getTime() / (1000*3600*24));
 				// updateds row HTML
-				row.find(".dur").html("<tt>" + hhmmssFormat + "</tt>");
+				let htmlString = "<tt>" 
+				if (days > 0){
+					htmlString += days + " day"
+					if (days > 1){htmlString += "s"}
+					htmlString += ", "
+				}
+				htmlString +=  hhmmssFormat + "</tt>"
+				row.find(".dur").html(htmlString);
 
 				// enable edit button
 				row.find(".editable").attr("contenteditable", false);
-			  $(this).hide();
-			  row.find(".edit-btn").show();
+				$(this).hide();
+				row.find(".edit-btn").show();
 
 			  // updates database
 				params = {
-					'contestId':rowvalues[0],
-					'contestName':rowvalues[1],
-					'description': rowvalues[2],
+					'contestId':contestId,
 					'startTime': rowvalues[3],
 					'endTime': rowvalues[4]
 				}
 
-				$.post('/admin/editcontesttable',params).done((response) => {
+				$.post('/admin/editcontesttimes',params).done((response) => {
 					if (response.status !== 200){
 						alert(response.error)
 					}

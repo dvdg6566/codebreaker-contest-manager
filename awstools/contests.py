@@ -47,17 +47,15 @@ def updateContestInfo(contestId, info):
 def updateContestTable(contestId, info):
 	contests_table.update_item(
 		Key = {'contestId' : contestId},
-		UpdateExpression = f'set description=:b, contestName=:c, startTime=:d, endTime=:e',
-		ExpressionAttributeValues={':b':info['description'],':c':info['contestName'], ':d':info['startTime'],':e':info['endTime']}
+		UpdateExpression = f'set startTime=:a, endTime=:b',
+		ExpressionAttributeValues={':a':info['startTime'],':b':info['endTime']}
 	)
 
 def createContest(contestId):
 	info = {}
 	info['contestId'] = contestId
-	info['description'] = f'Default description for id: {contestId}'
 	info['contestName'] = 'New Contest'
 	info['problems'] = []
-	info['users'] = {}
 	info['startTime'] = (datetime(9999, 12, 1, 5, 0, 0)).strftime("%Y-%m-%d %X")
 	info['endTime'] =  (datetime(9999, 12, 1, 11, 0, 0)).strftime("%Y-%m-%d %X")
 	info['subLimit'] = 50

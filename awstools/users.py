@@ -18,6 +18,11 @@ def getAllUsernames():
         ProjectionExpression = 'username'
     )
 
+def getAllUserContests():
+    return awshelper.scan(users_table,
+        ProjectionExpression = 'username, contest'
+    )
+
 # Get user's information based on username
 # TODO: Gets the contest info too and returns in as part of object
 def getUserInfo(username):

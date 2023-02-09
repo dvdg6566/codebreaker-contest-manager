@@ -7,7 +7,7 @@ from flask import render_template, session, flash, redirect, request
 # Gets timezone from environment variables
 TIMEZONE_OFFSET = int(os.environ.get('TIMEZONE_OFFSET'))
 
-def editcontesttable():
+def editcontesttimes():
 	contestId = request.form['contestId']
 
 	# Authenticate
@@ -28,9 +28,11 @@ def editcontesttable():
 	startTime -= timedelta(hours=TIMEZONE_OFFSET)
 	endTime -= timedelta(hours=TIMEZONE_OFFSET)
 
+	# Check that endTime has not already passed
+	if endTime < datetime.utcnow():
+		return {'status':300, 'error': 'Cannot set contest to end in the past!'}
+
 	params = {
-		'contestName': request.form['contestName'],
-		'description': request.form['description'],
 		'startTime': str(startTime),
 		'endTime': str(endTime) 
 	}
@@ -46,7 +48,18 @@ def editcontestlist():
 		return redirect("/")
 
 	contestsInfo = awstools.contests.getAllContestInfo()
+	contestNames = [x['contestId'] for x in contestsInfo]
+
+	# Fill up which user in contest
+	usersInfo = awstools.users.getAllUserContests()
+	contestUsers = {}
+	for i in contestNames: contestUsers[i] = []
+	for user in usersInfo: 
+		if user['contest'] in contestUsers:
+			contestUsers[user['contest']].append(user['username'])
+
 	for contest in contestsInfo:
+		contest['users'] = contestUsers[contest['contestId']]
 		contest['startTime'] = datetime.strptime(contest['startTime'], "%Y-%m-%d %X")
 		contest['endTime'] = datetime.strptime(contest['endTime'], "%Y-%m-%d %X")
 
@@ -57,8 +70,6 @@ def editcontestlist():
 		contest['startTime'] = str(contest['startTime'])
 		contest['endTime'] = str(contest['endTime'])
 		contest['problems'] = ['addition', 'multiplication', 'test', 'test2']
-
-	contestNames = [x['contestId'] for x in contestsInfo]
 
 	# Timezone string formatted to show GMT
 	timezoneString = f'+{TIMEZONE_OFFSET}' if TIMEZONE_OFFSET >= 0 else f'{TIMEZONE_OFFSET}'
