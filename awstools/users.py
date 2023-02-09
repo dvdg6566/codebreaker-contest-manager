@@ -5,8 +5,10 @@ from flask import session
 from awstools import awshelper
 from boto3.dynamodb.conditions import Key
 
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
+
 judgeName = os.environ.get('JUDGE_NAME')
-judgeName = 'codebreakercontest'
 dynamodb = boto3.resource('dynamodb')
 users_table = dynamodb.Table(f'{judgeName}-users')
 
@@ -35,7 +37,7 @@ def getCurrentUserInfo():
     else:
         return None
 
-def createUser(username, email, role='member', fullname=''):
+def createUser(username, role, email='', fullname=''):
     if fullname == '': fullname = username
     newUserInfo = {
         'username' : username,

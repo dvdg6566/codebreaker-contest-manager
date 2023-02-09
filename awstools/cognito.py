@@ -6,6 +6,10 @@ import secrets
 from awstools import users
 from botocore.exceptions import ClientError
 
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
+
+userPoolId = os.environ.get('COGNITO_USER_POOL_ID')
 clientId = os.environ.get('COGNITO_CLIENT_ID')
 client = boto3.client('cognito-idp')
 
@@ -29,16 +33,20 @@ def authenticate(username, password):
 		return {'status': 200, 'username': username}
 		
 	except ClientError as e:
+		print(e)
 		if e.response['Error']['Code'] == 'NotAuthorizedException':
 			return {'status': 403}
 		else:
 			return {'status':400}
 
-def createUser (username, email, role):
+def createUser (username, role, email=''):
 	# For admin role: Create user and let cognito send email
 	if role == 'admin':
+		if email == '':
+			return {'status': 400}
+
 		response = client.admin_create_user(
-			UserPoolId = 'ap-southeast-1_xiTNBPfQ3',
+			UserPoolId = userPoolId,
 			Username = username,
 			DesiredDeliveryMediums = ['EMAIL'],
 			UserAttributes=[
@@ -48,10 +56,14 @@ def createUser (username, email, role):
 				}
 			]
 		)
+
+		users.createUser(username=username, role=role, email=email)
+
+		return {'status': 200}
 	# For member role: Create user, set password and then
 	elif role == 'member':
 		response = client.admin_create_user(
-			UserPoolId = 'ap-southeast-1_xiTNBPfQ3',
+			UserPoolId = userPoolId,
 			Username = username
 		)
 		# Set password to fixed thing
@@ -59,12 +71,14 @@ def createUser (username, email, role):
 		password = generateSecurePassword()
 
 		response = client.admin_set_user_password(
-		    UserPoolId='ap-southeast-1_xiTNBPfQ3',
+		    UserPoolId=userPoolId,
 		    Username=username,
-		    Password='P@55w0rd',
+		    Password=password,
 		    Permanent=True
 		)
+
+		users.createUser(username=username, role=role, email=email)
+
+		return {'status': 200, 'password': password}
 	else:
 		return {'status': 405}
-
-	users.createUser(username, email, role)
