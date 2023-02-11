@@ -39,9 +39,8 @@ def getContestInfo(contestId):
 def updateContestInfo(contestId, info):
 	contests_table.update_item(
 		Key = {'contestId' : contestId},
-		UpdateExpression = f'set description=:b, contestName=:c, problems=:d, #u=:e, startTime=:f, endTime=:g, subLimit=:h, subDelay=:i',
-		ExpressionAttributeValues={':b':info['description'],':c':info['contestName'],':d':info['problems'],':e':info['users'], ':f':info['startTime'],':g':info['endTime'],':h':info['subLimit'],':i':info['subDelay']},
-		ExpressionAttributeNames={'#u':'users'}
+		UpdateExpression = f'set contestName=:b, problems=:c, startTime=:d, endTime=:e, subLimit=:f, subDelay=:g',
+		ExpressionAttributeValues={':b':info['contestName'],':c':info['problems'],':d':info['startTime'],':e':info['endTime'],':f':info['subLimit'],':g':info['subDelay']},
 	)
 
 def updateContestTable(contestId, info):

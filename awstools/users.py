@@ -62,6 +62,7 @@ def setContest(usernames, contestId):
     usersInfo = awshelper.batchGetItems(f'{judgeName}-users', usernames, 'username')
     failUsers = [] # Users that can't be updated
     for user in usersInfo:
+        print(user)
         fail = 0
         if user['contest']:
             if contestId in contestTimes and contestTimes[contestId]['endTime'] < curtime: 

@@ -1,4 +1,5 @@
 import awstools
+import json
 from flask import Flask, render_template, request, url_for, redirect, flash, session, get_flashed_messages, make_response, send_file
 
 def editUserTable():
@@ -7,19 +8,22 @@ def editUserTable():
     if userInfo == None or userInfo['role'] != 'admin':
         return {'status':300,'error':'Access to resource denied'}
 
-    operation = request.form['operation']
+    print(request.form)
+    operation = request.form.get('operation')
     # Adding users to contest
     if operation == 'ADD_USERS_TO_CONTEST':
-        contestUsers = request.form['operation']
-        contestId = request.form['operation']
+        contestUsers = json.loads(request.form.get('usernames'))
+        contestId = request.form.get('contestId')
 
         contestIds = awstools.contests.getAllContestIds()
-        usernames = awstools.users.getAllUsernames()
-        if contestId not in contestIds: return {'status':300, 'error': 'Invalid contestId!'}
+        usernames = [i['username'] for i in awstools.users.getAllUsernames()]
+
+        if contestId not in contestIds: return {'status':300, 'error': 'Invalid Contest Id!'}
         for user in contestUsers:
             if user not in usernames: return {'status':300, 'error': 'Invalid username!'}
 
-        resp = awstools.user.updateContest(usernames=contestUsers, contestId=contestId)
+        resp = awstools.users.setContest(usernames=contestUsers, contestId=contestId)
+        return {'status': 200}
     elif operation == 'EDIT_USER':
         pass
     else:

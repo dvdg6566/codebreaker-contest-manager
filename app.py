@@ -17,6 +17,7 @@ API_GATEWAY_LINK = os.environ.get('API_GATEWAY_LINK')
 app.config['SECRET_KEY'] = FLASK_SECRET_KEY
 app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024 * 64
 app.config['SESSION_COOKIE_NAME'] = 'codebreaker-login'
+# Pass API gateway connection link to jinja so that it can connect after each page loads
 app.jinja_env.globals['API_GATEWAY_LINK'] = API_GATEWAY_LINK
 
 app.add_url_rule('/', view_func=homeview.home, methods=["GET"])

@@ -91,11 +91,12 @@
 	</script>
 	<!-- Adds users to contest when button is clicked -->
 	<script>
+		var contestIds = {{contestIds|tojson}}
 		addUsers = () => {
 			let usernames = [] // users to add into contest
 			let contestId = $('#contest_id').val()
 
-			if (!contestIds.include(contestId)){
+			if (!contestIds.includes(contestId)){
 				alert('Invalid Contest Id!')
 				return
 			}
@@ -109,14 +110,15 @@
 			})
 			params = {
 				'operation': 'ADD_USERS_TO_CONTEST',
-				'usernames': usernames,
+				'usernames': JSON.stringify(usernames),
 				'contestId': contestId
 			}
 			$.post('/admin/editusertable',params).done((response) => {
 				if (response.status !== 200){
-					alert(response.error)
+					alert(response.error);
 				}else{
-					alert('Success!')
+					alert('Success!');
+					location.reload();
 				}
 			})
 		}
