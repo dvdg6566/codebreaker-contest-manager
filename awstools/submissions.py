@@ -17,6 +17,7 @@ region = os.environ.get('AWS_REGION')
 
 counters_table = dynamodb.Table(f'{judgeName}-global-counters')
 submissions_table = dynamodb.Table(f'{judgeName}-submissions')
+users_table = dynamodb.Table(f'{judgeName}-users')
 SUBMISSIONS_BUCKET_NAME = f'{judgeName}-submissions'
 stepFunctionARN = f"arn:aws:states:{region}:{accountId}:stateMachine:{judgeName}-grading"
 subPerPage = 25
@@ -161,18 +162,58 @@ def gradeSubmission(problemName,submissionId,username,submissionTime=None,langua
 	}
 
 	print(json.dumps(SF_input))
-	'''
-	{
-		"problemName": "addition",
-		"submissionId":4,
-		"username":"0rang3",
-		"submissionTime":"submissionTime",
-		"language":"cpp", 
-		"grader": 0,
-		"problemType": "Batch"
-	}
-	'''
 
 	res = SFclient.start_execution(stateMachineArn = stepFunctionARN, input = json.dumps(SF_input))
+
+# SUBMISSION DELAY
+def registerSubmission(username, problemName, submissionTime, firstSubmission):
+	# Updates users database when user submits to problemName at submissionTime
+	# firstSubmission is a counter to track whether this is the users's first submission to the problem
+	submissionTime = submissionTime.strftime("%Y-%m-%d %X")
+	if firstSubmission: 
+		users_table.update_item(
+			Key = {'username': username},
+			UpdateExpression = 'SET problemSubmissions. #a = :a, latestSubmissions. #a = :b',
+			ExpressionAttributeNames = {'#a': problemName},
+			ExpressionAttributeValues = {':a': 1, ':b': submissionTime}
+		)
+	else:
+		users_table.update_item(
+			Key = {'username': username},
+			UpdateExpression = 'ADD problemSubmissions. #a :a SET latestSubmissions. #a = :b',
+			ExpressionAttributeNames = {'#a': problemName},
+			ExpressionAttributeValues = {':a': 1, ':b': submissionTime}
+		)
+
+def checkSubmission(username, problemName, submissionTime, problemInfo):
+	# Returns true if submission complies with both submission delay and limit
+	subDelay = problemInfo['subDelay']
+	subLimit = problemInfo['subLimit']
+	resp = users_table.get_item(
+		Key= {"username": username },
+		ProjectionExpression = 'problemSubmissions. #a, latestSubmissions. #a',
+		ExpressionAttributeNames = {'#a': problemName}
+	)['Item']
+
+	# No submissions so far 
+	if resp == {}: return {'status': 200, 'firstSubmission': True}
+
+	# No time
+	latestSubmissionTime = datetime.strptime(resp['latestSubmissions'][problemName], "%Y-%m-%d %X")
+	latestSubmissionTime += timedelta(seconds=int(subDelay))
+	if latestSubmissionTime > submissionTime:
+		return {'status': 300, 
+			'error': f'Please wait {subDelay} seconds before submitting!',
+			'firstSubmission': False
+		}
+
+	problemSubmissions = resp['problemSubmissions'][problemName]
+	if problemSubmissions >= subLimit:
+		return {'status': 300, 
+			'error': f'You have used all {subLimit} submissions to this problem!',
+			'firstSubmission': False
+		}
+
+	return {'status': 200, 'firstSubmission': False}
 
 ''' END: GRADING '''

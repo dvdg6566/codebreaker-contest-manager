@@ -48,7 +48,10 @@ def createUser(username, role, email='', fullname=''):
         'email' : email,
         'fullname': fullname,
         'problemScores' : {},
-        'contest': ''
+        'contest': '',
+        'problemSubmissions': {},
+        'latestSubmissions': {}, 
+        'latestScoreChange': ''
     }
     users_table.put_item(Item = newUserInfo)
 

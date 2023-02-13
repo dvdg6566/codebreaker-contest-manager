@@ -22,15 +22,6 @@ def problem(problemName):
 	if (type(problemInfo) is str):
 		return 'Sorry, this problem does not exist'
 	problemInfo['testcaseCount'] = int(problemInfo['testcaseCount'])
-	timeLimit = problemInfo['timeLimit']
-	memoryLimit = problemInfo['memoryLimit']
-	subtaskMaxScores = problemInfo['subtaskScores']
-	subtaskNumber = len(subtaskMaxScores)
-	subtaskDependency = problemInfo['subtaskDependency']
-	customChecker = problemInfo['customChecker']
-	title = problemInfo['title']
-	problemType = problemInfo['problem_type']
-	validated = problemInfo['validated']
 
 	if problemInfo['problem_type'] == 'Communication':
 		if 'nameA' not in problemInfo.keys():
@@ -38,7 +29,7 @@ def problem(problemName):
 		if 'nameB' not in problemInfo.keys():
 			problemInfo['nameB'] = 'placeholderB'
 	
-	if not validated:
+	if not problemInfo['validated']:
 		if (userInfo == None or (userInfo['role'] != 'admin' and userInfo['role'] != 'superadmin')):
 			flash("Sorry, this problem still has issues. Please contact the administrators.", 'warning')
 			return redirect("/")
@@ -89,7 +80,7 @@ def problem(problemName):
 		language = languages[language]
 
 		''' BLOCK DISABLED OR NON-USERS FROM SUBMITTING '''
-		if userInfo == None or (userInfo['role'] not in ['member','admin']):
+		if userInfo == None:
 			flash('You do not have permission to submit!','warning')
 			return redirect(f'/problem/{problemName}')
 

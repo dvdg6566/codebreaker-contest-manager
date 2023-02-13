@@ -64,6 +64,8 @@ def createProblemWithId(problem_id):
     info['customChecker'] = False
     info['fullFeedback'] = True
     info['testcaseCount'] = 0
+    info['subDelay'] = 60
+    info['subLimit'] = 50
     updateProblemInfo(problem_id, info)
     subtasks = {}
     subtasks['subtaskScores'] = [100]

@@ -171,53 +171,52 @@ def submission(subId):
 			time.sleep(2)
 			return redirect(f"/submission/{subId}")
 		
+		''' RESUBMIT '''
+		if userInfo == None:
+			flash('You do not have permission to submit!','warning')
+			return redirect(f'/problem/{problemName}')
+		
+		if not problemInfo['validated']:
+			flash("Sorry, this problem is still incomplete.", "warning")
+			return redirect(f'/problem/{problemName}')
+
+		result = request.form 
+		code, codeA, codeB = '','',''
+		if problemInfo['problem_type'] == 'Communication':
+			codeA = result['codeA']
+			codeB = result['codeB']
 		else:
-			''' RESUBMIT '''
-			if userInfo == None:
-				flash('You do not have permission to submit!','warning')
-				return redirect(f'/problem/{problemName}')
-			
-			if not problemInfo['validated']:
-				flash("Sorry, this problem is still incomplete.", "warning")
-				return redirect(f'/problem/{problemName}')
+			code = result['code']
 
-			result = request.form 
-			code, codeA, codeB = '','',''
-			if problemInfo['problem_type'] == 'Communication':
-				codeA = result['codeA']
-				codeB = result['codeB']
-			else:
-				code = result['code']
+		if max(len(code), len(codeA), len(codeB)) > 128000:
+			flash("Sorry, your code is too long.", "warning")
+			return redirect(f'/problem/{problemName}')
 
-			if max(len(code), len(codeA), len(codeB)) > 128000:
-				flash("Sorry, your code is too long.", "warning")
-				return redirect(f'/problem/{problemName}')
+		# Assign new submission index
+		newSubId = awstools.submissions.getNextSubmissionId()
 
-			# Assign new submission index
-			newSubId = awstools.submissions.getNextSubmissionId()
+		if problemInfo['problem_type'] == 'Communication':
+			# Upload code file to S3
+			s3pathA = f'source/{newSubId}A.{language}'
+			s3pathB = f'source/{newSubId}B.{language}'
+			awstools.submissions.uploadSubmission(code = codeA, s3path = s3pathA)
+			awstools.submissions.uploadSubmission(code = codeB, s3path = s3pathB)
+		else:
+			# Upload code file to S3
+			s3path = f'source/{newSubId}.{language}'
+			awstools.submissions.uploadSubmission(code = code, s3path = s3path)
 
-			if problemInfo['problem_type'] == 'Communication':
-				# Upload code file to S3
-				s3pathA = f'source/{newSubId}A.{language}'
-				s3pathB = f'source/{newSubId}B.{language}'
-				awstools.submissions.uploadSubmission(code = codeA, s3path = s3pathA)
-				awstools.submissions.uploadSubmission(code = codeB, s3path = s3pathB)
-			else:
-				# Upload code file to S3
-				s3path = f'source/{newSubId}.{language}'
-				awstools.submissions.uploadSubmission(code = code, s3path = s3path)
+		awstools.submissions.gradeSubmission(
+			problemName = problemName,
+			submissionId = newSubId,
+			username = subDetails['username'], 
+			submissionTime = None,
+			language = language,
+			problemType = problemInfo['problem_type']
+		)
 
-			awstools.submissions.gradeSubmission(
-				problemName = problemName,
-				submissionId = newSubId,
-				username = subDetails['username'], 
-				submissionTime = None,
-				language = language,
-				problemType = problemInfo['problem_type']
-			)
-
-			time.sleep(2)
-			return redirect(f"/submission/{newSubId}")
+		time.sleep(2)
+		return redirect(f"/submission/{newSubId}")
 
 	'''END RESUBMISSION'''
 
