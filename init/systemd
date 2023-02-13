@@ -1,0 +1,11 @@
+[Unit]
+Description=Gunicorn instance for Codebreaker
+After=network.target
+[Service]
+User=ubuntu
+Group=www-data
+WorkingDirectory=/home/ubuntu/codebreaker-contest-manager
+ExecStart=/home/ubuntu/codebreaker-contest-manager/virtualenv/bin/gunicorn -b localhost:8000 app:app
+Restart=always
+[Install]
+WantedBy=multi-user.target
