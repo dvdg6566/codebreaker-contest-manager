@@ -48,6 +48,9 @@ def problem(problemName):
 
 	if form.is_submitted():
 		result = request.form
+		if userInfo == None:
+			flash("Unauthorised access!", "warning")
+			return redirect(f'/problem/{problemName}')
 		
 		if 'form_name' in result and result['form_name'] in ['download_input', 'download_output']:
 			if userInfo == None or userInfo['role'] != 'admin':
@@ -79,53 +82,20 @@ def problem(problemName):
 			return redirect(f'/problem/{problemName}')
 		language = languages[language]
 
-		''' BLOCK DISABLED OR NON-USERS FROM SUBMITTING '''
-		if userInfo == None:
-			flash('You do not have permission to submit!','warning')
-			return redirect(f'/problem/{problemName}')
-
-		if not problemInfo['validated']:
-			flash("Sorry, this problem is still incomplete.", "warning")
-			return redirect(f'/problem/{problemName}')
-
-		result = request.form 
-		code, codeA, codeB = '','',''
-		if problemInfo['problem_type'] == 'Communication':
-			codeA = result['codeA']
-			codeB = result['codeB']
-		else:
-			code = result['code']
-
-		if max(len(code), len(codeA), len(codeB)) > 128000:
-			flash("Sorry, your code is too long.", "warning")
-			return redirect(f'/problem/{problemName}')
-
-		# Assign new submission index
-		subId = awstools.submissions.getNextSubmissionId()
-
-		if problemInfo['problem_type'] == 'Communication':
-			# Upload code file to S3
-			s3pathA = f'source/{subId}A.{language}'
-			s3pathB = f'source/{subId}B.{language}'
-			awstools.submissions.uploadSubmission(code = codeA, s3path = s3pathA)
-			awstools.submissions.uploadSubmission(code = codeB, s3path = s3pathB)
-		else:
-			# Upload code file to S3
-			s3path = f'source/{subId}.{language}'
-			awstools.submissions.uploadSubmission(code = code, s3path = s3path)
-
-		# Grade submission
-		awstools.submissions.gradeSubmission(
-			problemName = problemName,
-			submissionId = subId,
-			username = userInfo['username'], 
-			submissionTime = None,
-			language = language,
-			problemType = problemInfo['problem_type']
+		''' GRADING '''
+		response = awstools.grading.gradeSubmission(
+			form = request.form,
+			problemInfo = problemInfo,
+			userInfo = userInfo,
+			language = language
 		)
 
+		if response['status'] != 200:
+			flash(response['error'], "warning")
+			return redirect(f'/problem/{problemName}')
+
 		time.sleep(2)
-		return redirect(f"/submission/{subId}")
+		return redirect(f"/submission/{response['subId']}")
 
 	return render_template('problem.html', form=form, probleminfo=problemInfo, userinfo = userInfo, statementHTML = statementHTML, remsubs = 50)
 	
