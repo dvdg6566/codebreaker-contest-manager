@@ -7,10 +7,93 @@
 <br>
 
 <div class="container">
-	<h1>Welcome to Codebreaker!</h1>
+	<h1>Welcome to Codebreaker</h1>
 
-	<br></br>
+	<br>
 
+	{% if userinfo == None %}
+	{% elif userinfo.role == 'admin' %}
+	{% elif contestinfo == None %}
+	<h3> No Contest Registered </h3>
+	<p> If you think this is a mistake, please contact an administrator. </p>
+	{% elif contestinfo.status == 'ENDED' %}
+	<h3> Contest Over </h3>
+	<p> Your participation in the contest <tt>{{userinfo.contest}}</tt> has ended. </p>
+	{% elif contestinfo.status == 'NOT_STARTED' %}
+		<h1> {{contestinfo.contestName}} </h1>
+		<p style="white-space:pre-wrap;">{{contestinfo.description}}</p>
+
+		<p hidden id="starttime"> {{startTime}} </p>
+
+		<form id = "newuserform" action = "" method = "post" class="form-group">
+			{{form.submit(type="submit", class="btn btn-primary w-100", id="submit")}}
+		</form>
+	{%elif contestinfo.status == 'ONGOING' %}
+	<h4 id="timer"></h4>
+
+	<table class="table table-hover" id="myTable">
+		<thead class="thead-dark">
+			<tr>
+				<th scope="col">Problem ID</th>
+				<th scope="col">Your Score</th>
+				<th scope="col">Title</th>
+				<th scope="col">Problem Type</th>
+			</tr>
+			</thead>
+			
+			<tbody>
+
+			{% for info in problems %}
+				<tr
+					{% if info.score == 100 %}
+						style="-webkit-box-shadow: inset 16px 0px 0px -7px #0C6;"
+					{% endif %}
+				>
+				<th scope="row">
+					<a href="{{url_for('problem', problemName=info.problemName)}}" class="pl-2" target="_blank">{{info.problemName}}</a>
+				</th>
+					<td > <h6 style="margin: 2px">
+					<span style = "width: 36px"
+						class="pb-1 text-white badge badge-{{"success" if info.score==100 else ("danger" if info.score == 0 else ("secondary" if info.score == "N/A" else "warning"))}}"> {{info.score}}
+					</span> </h6>	
+					</td>
+					<td>{{info.title}}</td>
+					<td>{{info.problem_type}}</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+	{%endif%}
 </div>
+
+<script>
+	var endTime = document.getElementById("endtime").innerHTML
+            var countDownDate = new Date(endTime).getTime();
+	//console.log(new Date().getTime())
+	//console.log(countDownDate)
+	function update(){
+		var now = new Date().getTime();
+		var distance = countDownDate - now;
+		var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+		var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+		var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+		var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+		
+		str = "Time to End: "
+		if(days != 0) str += days + "d ";
+		if(hours != 0) str += hours + "h ";
+		if(minutes != 0) str += minutes + "m ";
+		if(seconds != 0) str += seconds + "s ";
+		if (document.getElementById("timer") != null){
+			document.getElementById("timer").innerHTML = str;
+			if (distance < 0) {
+				clearInterval(x);
+				document.getElementById("timer").innerHTML = "Contest is over";
+			}
+		}
+	}
+	update()
+	var x = setInterval(update , 1000);
+</script>
 
 {% endblock %}

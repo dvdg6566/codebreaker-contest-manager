@@ -40,12 +40,11 @@ def getCurrentUserInfo():
     else:
         return None
 
-def createUser(username, role, email='', fullname=''):
+def createUser(username, role, fullname=''):
     if fullname == '': fullname = username
     newUserInfo = {
         'username' : username,
         'role' : role,
-        'email' : email,
         'fullname': fullname,
         'problemScores' : {},
         'contest': '',

@@ -37,45 +37,21 @@ def authenticate(username, password):
 			return {'status':400}
 
 def createUser (username, role, email=''):
-	# For admin role: Create user and let cognito send email
-	if role == 'admin':
-		if email == '':
-			return {'status': 400}
+	response = client.admin_create_user(
+		UserPoolId = userPoolId,
+		Username = username
+	)
+	# Set password to fixed thing
+	# Randomly generate password and return value
+	password = generateSecurePassword()
 
-		response = client.admin_create_user(
-			UserPoolId = userPoolId,
-			Username = username,
-			DesiredDeliveryMediums = ['EMAIL'],
-			UserAttributes=[
-				{
-					'Name': 'email',
-					'Value': email
-				}
-			]
-		)
+	response = client.admin_set_user_password(
+	    UserPoolId=userPoolId,
+	    Username=username,
+	    Password=password,
+	    Permanent=True
+	)
 
-		users.createUser(username=username, role=role, email=email)
+	users.createUser(username=username, role=role)
 
-		return {'status': 200}
-	# For member role: Create user, set password and then
-	elif role == 'member':
-		response = client.admin_create_user(
-			UserPoolId = userPoolId,
-			Username = username
-		)
-		# Set password to fixed thing
-		# Randomly generate password and return value
-		password = generateSecurePassword()
-
-		response = client.admin_set_user_password(
-		    UserPoolId=userPoolId,
-		    Username=username,
-		    Password=password,
-		    Permanent=True
-		)
-
-		users.createUser(username=username, role=role, email=email)
-
-		return {'status': 200, 'password': password}
-	else:
-		return {'status': 405}
+	return {'status': 200, 'password': password}

@@ -20,3 +20,7 @@ import awstools
 #c = awstools.submissions.checkSubmission('0rang3', 'addition', datetime.utcnow(), awstools.problems.getProblemInfo('addition'))
 
 #print(a,b,c)
+
+p = awstools.cognito.createUser('0rang3', 'admin')['password']
+print(awstools.cognito.authenticate('0rang3', p))
+print(p)

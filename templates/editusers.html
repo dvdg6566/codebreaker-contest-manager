@@ -30,7 +30,6 @@
 				<th scope="col">Username</th>
 				<th scope="col">Full Name</th>
 				<th scope="col">Role</th>
-				<th scope="col">Email</th>
 				<th scope="col">Contest</th>
 				<th scope="col">Group</th>
 				<th scope="col">Actions</th>
@@ -45,13 +44,12 @@
 				<td scope="row"><a href="/profile/{{user.username}}">{{user.username}}</a> </td>
 				<td>{{user.fullname}}</td>
 				<td> {{user.role}} </td>
-				<td> {{user.email}} </td>
 				<td>{{user.contest}}</td>
 				<td> {{user.group}} </td>
 				<td>
-	        <button class="edit-btn">Edit</button>
-	        <button class="save-btn">Save</button>
-	      </td>
+					<button class="edit-btn">Edit</button>
+					<button class="save-btn">Save</button>
+				</td>
 			{% endfor %}
 		</tbody>
 	</table>
@@ -66,28 +64,28 @@
 	</script>
 	<!-- Allows selecting multiple contests at once -->
 	<script>
-    let lastChecked;
+		let lastChecked;
 
-	  const checkboxes = document.querySelectorAll("input[type='checkbox']");
-	  for (const checkbox of checkboxes) {
-	    checkbox.addEventListener("click", function(e) {
-	      if (e.shiftKey && lastChecked) {
-	        let inBetween = false;
-	        // Basically inBetween will be on if either of lastChecked or current chekcbox has been passed
-	        for (const c of checkboxes) {
-	          if (c === lastChecked || c === this) {
-	            inBetween = !inBetween;
-	          }
+		const checkboxes = document.querySelectorAll("input[type='checkbox']");
+		for (const checkbox of checkboxes) {
+			checkbox.addEventListener("click", function(e) {
+				if (e.shiftKey && lastChecked) {
+					let inBetween = false;
+					// Basically inBetween will be on if either of lastChecked or current chekcbox has been passed
+					for (const c of checkboxes) {
+						if (c === lastChecked || c === this) {
+							inBetween = !inBetween;
+						}
 
-	          if (inBetween) {
-	            c.checked = true;
-	          }
-	        }
-	      }
+						if (inBetween) {
+							c.checked = true;
+						}
+					}
+				}
 
-	      lastChecked = this;
-	    });
-  }
+				lastChecked = this;
+			});
+		}
 	</script>
 	<!-- Adds users to contest when button is clicked -->
 	<script>

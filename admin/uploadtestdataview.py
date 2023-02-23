@@ -17,4 +17,4 @@ def uploadtestdata(problemId):
 	credentials = awstools.sts.getTokens(problemId)
 	credentials = json.dumps(credentials)
 
-	return render_template('uploadtestdata.html', userinfo=userInfo, probleminfo=problemInfo, stsKeys=credentials, stx="fdcndsi")
+	return render_template('uploadtestdata.html', userinfo=userInfo, probleminfo=problemInfo, stsKeys=credentials)
