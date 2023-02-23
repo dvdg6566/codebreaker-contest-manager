@@ -26,12 +26,14 @@ def home():
 		problemInfo = awstools.problems.getProblemInfo(problem)
 		problems.append(problemInfo)
 
-	print(userinfo)
-	print(problems)
 	for problem in problems:
 		if problem['problemName'] in userinfo['problemScores']: 
 			problem['score'] = userinfo['problemScores'][problem['problemName']]
 		else:
 			problem['score'] = 'N/A'
 
-	return render_template("home.html", userinfo=userinfo, contestinfo=contestinfo, problems=problems)
+	score = {}
+	score['user'] = sum([problem['score'] for problem in problems])
+	score['total'] = 100 * len(problems)
+
+	return render_template("home.html", userinfo=userinfo, contestinfo=contestinfo, problems=problems, score=score)

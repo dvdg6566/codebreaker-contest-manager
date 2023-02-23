@@ -7,28 +7,28 @@
 <br>
 
 <div class="container">
-	<h1>Welcome to Codebreaker</h1>
 
-	<br>
 
 	{% if userinfo == None %}
+		<h1>Welcome to Codebreaker</h1><br>
 	{% elif userinfo.role == 'admin' %}
+		<h1>Welcome to Codebreaker</h1><br>
+
 	{% elif contestinfo == None %}
+	<h1>Welcome to Codebreaker</h1><br>
 	<h3> No Contest Registered </h3>
 	<p> If you think this is a mistake, please contact an administrator. </p>
 	{% elif contestinfo.status == 'ENDED' %}
 	<h3> Contest Over </h3>
 	<p> Your participation in the contest <tt>{{userinfo.contest}}</tt> has ended. </p>
+
 	{% elif contestinfo.status == 'NOT_STARTED' %}
 		<h1> {{contestinfo.contestName}} </h1>
-		<p style="white-space:pre-wrap;">{{contestinfo.description}}</p>
+		
 
-		<p hidden id="starttime"> {{startTime}} </p>
-
-		<form id = "newuserform" action = "" method = "post" class="form-group">
-			{{form.submit(type="submit", class="btn btn-primary w-100", id="submit")}}
-		</form>
 	{%elif contestinfo.status == 'ONGOING' %}
+	<h1> {{contestinfo.contestName}} ({{score.user}}/{{score.total}}) </h1>
+
 	<h4 id="timer"></h4>
 
 	<table class="table table-hover" id="myTable">
@@ -67,13 +67,13 @@
 </div>
 
 <script>
-	var endTime = document.getElementById("endtime").innerHTML
-            var countDownDate = new Date(endTime).getTime();
-	//console.log(new Date().getTime())
-	//console.log(countDownDate)
+	var countDownDate = {{contestinfo.endTime | tojson}};
+	var countDownSeconds = new Date(countDownDate).getTime() - 60000 * new Date().getTimezoneOffset(); // account for timezone
+
 	function update(){
-		var now = new Date().getTime();
-		var distance = countDownDate - now;
+		var nowSeconds = new Date().getTime();
+		var distance = countDownSeconds - nowSeconds;
+
 		var days = Math.floor(distance / (1000 * 60 * 60 * 24));
 		var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
 		var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
