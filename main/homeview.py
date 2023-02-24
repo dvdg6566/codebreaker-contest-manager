@@ -30,10 +30,10 @@ def home():
 		if problem['problemName'] in userinfo['problemScores']: 
 			problem['score'] = userinfo['problemScores'][problem['problemName']]
 		else:
-			problem['score'] = 'N/A'
+			problem['score'] = 0
 
 	score = {}
-	score['user'] = sum([problem['score'] for problem in problems])
+	score['user'] = sum([problem['score'] for problem in problems if problem['score'] != 'N/A'])
 	score['total'] = 100 * len(problems)
 
 	return render_template("home.html", userinfo=userinfo, contestinfo=contestinfo, problems=problems, score=score)

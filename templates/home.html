@@ -23,8 +23,8 @@
 	<p> Your participation in the contest <tt>{{userinfo.contest}}</tt> has ended. </p>
 
 	{% elif contestinfo.status == 'NOT_STARTED' %}
-		<h1> {{contestinfo.contestName}} </h1>
-		
+	<h1> {{contestinfo.contestName}} </h1>
+	<h4 id="timer"></h4>
 
 	{%elif contestinfo.status == 'ONGOING' %}
 	<h1> {{contestinfo.contestName}} ({{score.user}}/{{score.total}}) </h1>
@@ -67,33 +67,56 @@
 </div>
 
 <script>
-	var countDownDate = {{contestinfo.endTime | tojson}};
-	var countDownSeconds = new Date(countDownDate).getTime() - 60000 * new Date().getTimezoneOffset(); // account for timezone
+	// Countdown to end time if contest is ongoing
+	// Countdown to start time if contest has not starte
+
+	var endTimeDate = {{contestinfo.endTime | tojson}};
+	var startTimeDate = {{contestinfo.startTime | tojson}};
+	var contestStatus = {{contestinfo.status | tojson}};
+
+	// convert to UTC time, accounting for timezone
+	var endTimeSeconds = new Date(endTimeDate).getTime() - 60000 * new Date().getTimezoneOffset(); 
+	var startTimeSeconds = new Date(startTimeDate).getTime() - 60000 * new Date().getTimezoneOffset(); 
 
 	function update(){
 		var nowSeconds = new Date().getTime();
-		var distance = countDownSeconds - nowSeconds;
+
+		if (contestStatus === 'NOT_STARTED'){
+			var distance = startTimeSeconds - nowSeconds;
+		}else if (contestStatus === 'ONGOING'){
+			var distance =  endTimeSeconds -nowSeconds;
+		}
+
+		if (Math.floor(distance / 1000) <= 0) {
+			// resolve contest begin/end
+			clearInterval(x);
+			location.reload();
+		}
 
 		var days = Math.floor(distance / (1000 * 60 * 60 * 24));
 		var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
 		var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
 		var seconds = Math.floor((distance % (1000 * 60)) / 1000);
 		
-		str = "Time to End: "
+		if (contestStatus === 'NOT_STARTED'){
+			var str = "Time to Begin: "
+		}else if (contestStatus === 'ONGOING'){
+			var str = "Time to End: "
+		}
+
 		if(days != 0) str += days + "d ";
 		if(hours != 0) str += hours + "h ";
 		if(minutes != 0) str += minutes + "m ";
 		if(seconds != 0) str += seconds + "s ";
+
 		if (document.getElementById("timer") != null){
 			document.getElementById("timer").innerHTML = str;
-			if (distance < 0) {
-				clearInterval(x);
-				document.getElementById("timer").innerHTML = "Contest is over";
-			}
 		}
 	}
-	update()
-	var x = setInterval(update , 1000);
+	if (contestStatus === 'NOT_STARTED' || contestStatus === 'ONGOING'){
+		update()
+		var x = setInterval(update , 1000);
+	}
 </script>
 
 {% endblock %}
