@@ -7,11 +7,10 @@ from botocore.exceptions import ClientError
 
 iam_client = boto3.client('iam')
 sts_client = boto3.client('sts')
-
+accountId = os.environ.get('AWS_ACCOUNT_ID')
 judgeName = os.environ.get('JUDGE_NAME')
 
 def createRole(problemName):
-
 	roleName = f'{judgeName}-testdata-{problemName}-role'
 
 	policyDocument = {
@@ -31,8 +30,9 @@ def createRole(problemName):
 				"Effect": "Allow",
 				"Principal": {
 					"AWS": [
-						"arn:aws:iam::{accountId}:role/ec2main",
-						"arn:aws:iam::{accountId}:root"
+						f"arn:aws:iam::{accountId}:role/ec2main",
+						f"arn:aws:iam::{accountId}:user/orange",
+						f"arn:aws:iam::{accountId}:root"
 					] # Allow 
 				},
 				"Action": "sts:AssumeRole",
@@ -49,7 +49,7 @@ def createRole(problemName):
 			MaxSessionDuration = 3600
 		)
 
-		sleep(5)
+		sleep(10)
 
 		arn = resp['Role']['Arn']
 
