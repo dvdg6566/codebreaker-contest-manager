@@ -1,6 +1,7 @@
-import awstools
-import json
 from flask import Flask, render_template, request, url_for, redirect, flash, session, get_flashed_messages, make_response, send_file
+
+import json
+import awstools
 
 def editUserTable():
     userInfo = awstools.users.getCurrentUserInfo()

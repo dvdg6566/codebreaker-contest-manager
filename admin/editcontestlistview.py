@@ -1,8 +1,9 @@
+from flask import render_template, session, flash, redirect, request
+from forms import addContestForm
+
 import os
 import awstools
-from forms import addContestForm
 from datetime import datetime, timedelta
-from flask import render_template, session, flash, redirect, request
 
 # Gets timezone from environment variables
 TIMEZONE_OFFSET = int(os.environ.get('TIMEZONE_OFFSET'))

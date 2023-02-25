@@ -1,10 +1,10 @@
-import io
-import time
-import random
-import flask
-import awstools
-from forms import SubmitForm
 from flask import Flask, render_template, request, url_for, redirect, flash, session, get_flashed_messages, make_response, send_file
+from forms import SubmitForm
+
+import io
+import awstools
+from time import sleep 
+
 from language import get_languages
 languages = get_languages()
 
@@ -94,7 +94,7 @@ def problem(problemName):
 			flash(response['error'], "warning")
 			return redirect(f'/problem/{problemName}')
 
-		time.sleep(2)
+		sleep(2)
 		return redirect(f"/submission/{response['subId']}")
 
 	return render_template('problem.html', form=form, probleminfo=problemInfo, userinfo = userInfo, statementHTML = statementHTML, remsubs = 50)

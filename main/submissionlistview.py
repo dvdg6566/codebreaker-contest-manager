@@ -1,9 +1,9 @@
 from flask import render_template, session, request, redirect, flash, url_for
 from forms import searchSubmissionForm
+
 import awstools
 import language
 from math import ceil
-from pprint import pprint
 
 def submissionlist():
     pageNo = request.args.get('page')
