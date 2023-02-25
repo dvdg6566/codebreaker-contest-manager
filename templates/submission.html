@@ -31,6 +31,11 @@
 							</tr>
 							
 							<tr>
+								<th scope="row">Grading Time </th>
+								<td> {{subDetails.gradingCompleteTime}} </td>
+							</tr>
+
+							<tr>
 								<th scope="row">Score</th>
 								<td> {{subDetails.totalScore}} </td>
 							</tr>
@@ -49,15 +54,14 @@
 							{% endif %}
 						</tbody>
 					</table>
-					{% if userinfo != None and subDetails.username == userinfo.username %}
-						<!-- own submission -->
-						{% if probleminfo['problem_type'] != 'Communication' %}
+					<!-- own submission -->
+					{% if subDetails.username == userinfo.username %}
+						{% if probleminfo.problem_type != 'Communication' %}
 							<form autocomplete="off" id = "submitCodeForm" action = "" method = "post" class="form-group">
 								<p> {{form.code(class = 'form-control', id = 'editor', maxLength = '50', innerHTML = code)}} </p>
 								<p id="submitButtonParagraph" hidden>  {{form.submit(class="btn btn-primary", onclick="onSubmit()")}} </p>
 							</form>
-							<p id="codestorage" hidden>{{code}}</p>
-							<p>{{message}}</p>
+							<p id="codestorage" hidden>{{codes.code}}</p>
 						{% else %}
 							<form autocomplete="off" id = "submitCommunicationForm" action = "" method = "post" class = "form-group">
 								<p> {{probleminfo.nameA}}.cpp </p>
@@ -66,25 +70,20 @@
 								<p> {{form.codeB(class = 'form-control', id = 'editorB', maxLength = '50')}} </p>
 								<p id="submitFilesForm"> {{form.submit(class="btn btn-primary", onclick="onSubmit()")}} </p>
 							</form>
-							<p id="codestorageA" hidden>{{codeA}}</p>
-							<p id="codestorageB" hidden>{{codeB}}</p>
-							<p>{{message}}</p>
+							<p id="codestorageA" hidden>{{codes.codeA}}</p>
+							<p id="codestorageB" hidden>{{codes.codeB}}</p>
 						{% endif %}
-					{% elif userinfo.role == "admin" or userinfo.role == "superadmin" or (userinfo != None and userinfo['problemScores'][probleminfo.problemName] == 100)%}
-						<!-- admin or superadmin or person ac -->
-						{% if code != None %}
-							<textarea id='codebox'>{{code}}</textarea> 
-							<p id="codestorage" hidden>{{code}}</p>
-							<p>{{message}}<p>
+
+					{% elif userinfo.role == "admin"%}
+						<!-- Admins can view code -->
+						{% if probleminfo.problemType != 'Communication' %}
+							<textarea id='codebox'>{{codes.code}}</textarea> 
 						{% else %}
 							<p> {{probleminfo.nameA}}.cpp </p>
-							<textarea id='codeboxA'>{{codeA}}</textarea>
-							<p id="codestorageA" hidden>{{codeA}}</p>
+							<textarea id='codeboxA'>{{codes.codeA}}</textarea>
 							<br>
 							<p> {{probleminfo.nameB}}.cpp </p>
-							<textarea id='codeboxB'>{{codeB}}</textarea>
-							<p id="codestorageB" hidden>{{codeB}}</p>
-							<p>{{mesage}}<p>
+							<textarea id='codeboxB'>{{codes.codeB}}</textarea>
 						{% endif %}
 					{% else %}
 						<p id="codestorage" hidden></p>
@@ -145,15 +144,16 @@
 					<p> {{subDetails.compileErrorMessage|safe}} </p>
 					{%endif%}
 
-					<!-- If this is your own submission, then allow regrading-->
-					{% if subDetails.username  == userinfo['username'] %}
-						{% if probleminfo['problem_type'] != 'Communication' %}
+					<!-- If this is your own submission, then allow resubmit-->
+					{% if subDetails.username  == userinfo.username %}
+						{% if probleminfo.problem_type != 'Communication' %}
 						<p id="submitButtonParagraph2">{{form.submit(class="btn btn-secondary", onclick="onSubmit()", form="submitCodeForm")}}</p>
 						{% else %}
 						<p id="submitButtonParagraph2">{{form.submit(class="btn btn-secondary", onclick="onSubmit()", form="submitCommunicationForm")}}</p>
 						{% endif %}
-
 					{% endif %}
+
+					<!-- If user is admin, can regrade -->
 					{% if userinfo.role == "admin" %}
 						<form action="" method="post" class="form-group">
 							<input type="hidden" name="form_name" value="regrade">
@@ -166,9 +166,11 @@
 		{%endif%}
 	</div>
 		
-	{% if toRefresh %}
+	<!-- Have not finished grading -->
+	{% if subDetails.gradingCompleteTime == '' %}
 	<meta http-equiv="refresh" content="2; URL=/submission/{{subDetails.subId}}">
 	{% endif %}
+
 	<script>
 		$(document).ready(function(){
 			$('#submitCodeForm').submit(function(){

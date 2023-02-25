@@ -52,16 +52,14 @@ def submission(subId):
 	submissionTime = subDetails['submissionTime']
 	gradingTime = subDetails['gradingTime']
 	
-	code = None
-	codeA = None
-	codeB = None
+	codes = {}
 
 	if 'code' in subDetails.keys():
-		code= subDetails['code']
+		codes['code'] = subDetails['code']
 	else:
 		# Communication problem
-		codeA = subDetails['codeA']
-		codeB = subDetails['codeB']
+		codes['codeA'] = subDetails['codeA']
+		codes['codeB'] = subDetails['codeB']
 
 	if 'compileErrorMessage' in subDetails.keys():
 		subDetails['maxTime'] = 'N/A'
@@ -71,7 +69,7 @@ def submission(subId):
 		subDetails['maxTime'] = f'{subDetails["maxTime"]} seconds'
 		subDetails['maxMemory'] = f'{subDetails["maxMemory"]} MB'
 
-	if problemInfo['problem_type'] == 'Communication' and code != None:
+	if problemInfo['problem_type'] == 'Communication' and 'code' in codes:
 		flash('This submission was made before the problem type was converted to communication', 'warning')
 
 	subtaskMaxScores = problemInfo['subtaskScores']
@@ -80,10 +78,8 @@ def submission(subId):
 	testcaseNumber = problemInfo['testcaseCount']
 	fullFeedback = problemInfo['fullFeedback']
 
-	toRefresh = False
 	subtaskDetails = []
 
-	changed = False
 	changedSubtask = (len(subtaskMaxScores) != len(subtaskScores))
 	
 	for i in range(subtaskNumber):
@@ -114,7 +110,6 @@ def submission(subId):
 			for ind in TC:
 				if len(scores) <= ind:
 					detail['testcases'].append({'score' : '-', 'verdict' :'UG', 'time': 'N/A', 'memory': 'N/A'})
-					changed = True
 					continue
 				elif not fullFeedback and nonAC:
 					detail['testcases'].append({'score' : '-', 'verdict' :'N/A', 'time': 'N/A', 'memory': 'N/A'})
@@ -124,7 +119,6 @@ def submission(subId):
 					detail['testcases'].append({'score' : scores[ind], 'verdict' : verdicts[ind], 'time': times[ind], 'memory': memories[ind]})
 				if verdicts[ind] == ":(":
 					detail['done'] = False
-					toRefresh = True
 				if scores[ind] == 0 and verdicts[ind] != "AC" and verdicts[ind] != "PS":
 					detail['verdict'] = 'WA'
 					stopVerdict = 1
@@ -135,14 +129,9 @@ def submission(subId):
 		detail['yourScore'] = formatFloat(detail['yourScore'])
 		totalScore += detail['yourScore']
 
-		diffInTime = (datetime.datetime.utcnow() + datetime.timedelta(hours=8) - datetime.datetime.strptime(gradingTime, '%Y-%m-%d %H:%M:%S')).total_seconds()
-
 		subtaskDetails.append(detail)
 	
-	# If submission was submitted more than 1 minute ago, or if submission is compile error, don't refresh
-	if diffInTime > 60 or subDetails['compileErrorMessage'] != '':
-		toRefresh = False
-	if changed:
+	if len(scores) < testcaseNumber:
 		flash("If you see the 'UG' verdict, it means that testcases were added after this submission was graded", "warning")
 	if changedSubtask:
 		flash("Some subtasks were added or removed from this question after this submission was graded", "warning")
@@ -159,7 +148,7 @@ def submission(subId):
 				return redirect(f'/problem/{problemName}')
 
 			# For regrade, the code is already there so we just call grade 
-			awstools.submissions.startGrading(
+			awstools.grading.startGrading(
 				problemName = problemName,
 				submissionId = subId,
 				username = subDetails['username'], 
@@ -197,6 +186,6 @@ def submission(subId):
 
 	'''END RESUBMISSION'''
 
-	return render_template('submission.html', message="",subDetails=subDetails,probleminfo=problemInfo, userinfo=userInfo,toRefresh=toRefresh,form=form,code=code,codeA=codeA,codeB=codeB,subtaskDetails=subtaskDetails)
+	return render_template('submission.html',subDetails=subDetails,probleminfo=problemInfo, userinfo=userInfo,form=form,codes=codes,subtaskDetails=subtaskDetails)
 
 #END: SUBMISSION -----------------------------------------------------------------------------------------------------------------------------------------------------

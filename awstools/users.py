@@ -40,17 +40,19 @@ def getCurrentUserInfo():
     else:
         return None
 
-def createUser(username, role, fullname=''):
+def createUser(username, role, fullname='', email='', label=''):
     if fullname == '': fullname = username
     newUserInfo = {
         'username' : username,
         'role' : role,
         'fullname': fullname,
-        'problemScores' : {},
         'contest': '',
+        'problemScores' : {},
         'problemSubmissions': {},
         'latestSubmissions': {}, 
-        'latestScoreChange': ''
+        'latestScoreChange': '',
+        'label': label,
+        'email': email
     }
     users_table.put_item(Item = newUserInfo)
 
