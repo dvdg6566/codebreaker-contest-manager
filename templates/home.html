@@ -66,6 +66,7 @@
 	{%endif%}
 </div>
 
+{% if contestinfo != None %}
 <script>
 	// Countdown to end time if contest is ongoing
 	// Countdown to start time if contest has not starte
@@ -118,5 +119,6 @@
 		var x = setInterval(update , 1000);
 	}
 </script>
+{%endif%}
 
 {% endblock %}

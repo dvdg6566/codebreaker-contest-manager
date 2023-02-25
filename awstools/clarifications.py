@@ -5,7 +5,6 @@ from datetime import datetime
 from boto3.dynamodb.conditions import Key
 from awstools import awshelper, users, websocket
 
-
 dynamodb = boto3.resource('dynamodb')
 
 judgeName = os.environ.get('JUDGE_NAME')

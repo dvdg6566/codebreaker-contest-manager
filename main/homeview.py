@@ -9,6 +9,8 @@ def home():
 		return render_template("home.html", userinfo=userinfo, contestinfo=None)
 
 	contestinfo = awstools.contests.getContestInfo(contestId = userinfo['contest'])
+	if contestinfo == None: # No registered contest
+		return render_template("home.html", userinfo=userinfo, contestinfo=None)		
 	
 	startTime = datetime.strptime(contestinfo['startTime'], "%Y-%m-%d %X")
 	endTime = datetime.strptime(contestinfo['endTime'], "%Y-%m-%d %X")

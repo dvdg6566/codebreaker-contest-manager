@@ -1,11 +1,12 @@
 from flask import render_template, redirect, flash, request, session, make_response
-import datetime
-import time
-import random
-
-import awstools
 from forms import ResubmitForm
 
+import os
+import awstools
+from time import sleep 
+from datetime import datetime, timedelta
+
+TIMEZONE_OFFSET = int(os.environ.get('TIMEZONE_OFFSET'))
 #BEGIN: SUBMISSION -----------------------------------------------------------------------------------------------------------------------------------------------------
 
 def submission(subId):
@@ -34,33 +35,22 @@ def submission(subId):
 		if x == round(x): return round(x)
 		return x
 
-	subtaskScores = [formatFloat(i) for i in subDetails['subtaskScores']]
-	scores = [formatFloat(i) for i in subDetails["score"]]
-	language = subDetails['language']
-
 	problemName = subDetails['problemName']
 	username = subDetails['username']
 	problemInfo = awstools.problems.getProblemInfo(problemName)
-	if type(problemInfo) == str:
-		return "Sorry, this problem doesn't exist"
-	totalScore = 0
-	verdicts = subDetails['verdicts']
-	times = [round(x,2) for x in subDetails['times']]
-	memories = [round(x) for x in subDetails['memories']]
-	maxTime = round( max(max(subDetails['times']), float(subDetails['maxTime'])), 3);
-	maxMemory = round( max(max(subDetails['memories']), float(subDetails['maxMemory'])), 2);
-	submissionTime = subDetails['submissionTime']
-	gradingTime = subDetails['gradingTime']
-	
-	codes = {}
 
-	if 'code' in subDetails.keys():
-		codes['code'] = subDetails['code']
-	else:
-		# Communication problem
-		codes['codeA'] = subDetails['codeA']
-		codes['codeB'] = subDetails['codeB']
+	# Convert into specific imezone
+	def convertToLocalTimezone(timestring, offset):
+		if timestring == '': return ''
+		timestamp = datetime.strptime(timestring, "%Y-%m-%d %X")
+		timestamp += timedelta(hours=offset)
+		newTimestring = timestamp.strftime("%Y-%m-%d %X")
+		newTimestring += f' (GMT+{offset})' if offset >= 0 else f' (GMT{offset})'
+		return newTimestring
+	subDetails['submissionTime'] = convertToLocalTimezone(subDetails['submissionTime'], TIMEZONE_OFFSET)
+	subDetails['gradingCompleteTime'] = convertToLocalTimezone(subDetails['gradingCompleteTime'], TIMEZONE_OFFSET)
 
+	# Set time and memory to NA for compile errors 
 	if 'compileErrorMessage' in subDetails.keys():
 		subDetails['maxTime'] = 'N/A'
 		subDetails['maxMemory'] = 'N/A'
@@ -69,7 +59,7 @@ def submission(subId):
 		subDetails['maxTime'] = f'{subDetails["maxTime"]} seconds'
 		subDetails['maxMemory'] = f'{subDetails["maxMemory"]} MB'
 
-	if problemInfo['problem_type'] == 'Communication' and 'code' in codes:
+	if problemInfo['problem_type'] == 'Communication' and 'code' in subDetails:
 		flash('This submission was made before the problem type was converted to communication', 'warning')
 
 	subtaskMaxScores = problemInfo['subtaskScores']
@@ -78,9 +68,13 @@ def submission(subId):
 	testcaseNumber = problemInfo['testcaseCount']
 	fullFeedback = problemInfo['fullFeedback']
 
+	totalScore = 0
+	verdicts = subDetails['verdicts']
+	times = [round(x,2) for x in subDetails['times']]
+	scores = [formatFloat(i) for i in subDetails['score']]
+	memories = [round(x) for x in subDetails['memories']]
+	subtaskScores = [formatFloat(i) for i in subDetails['subtaskScores']]
 	subtaskDetails = []
-
-	changedSubtask = (len(subtaskMaxScores) != len(subtaskScores))
 	
 	for i in range(subtaskNumber):
 		maxScore = subtaskMaxScores[i]
@@ -133,13 +127,14 @@ def submission(subId):
 	
 	if len(scores) < testcaseNumber:
 		flash("If you see the 'UG' verdict, it means that testcases were added after this submission was graded", "warning")
-	if changedSubtask:
+	if len(subtaskMaxScores) != len(subtaskScores):
 		flash("Some subtasks were added or removed from this question after this submission was graded", "warning")
 
 	'''RESUBMISSION'''
 	form = ResubmitForm()
 
 	if form.is_submitted():
+		subDetails = awstools.submissions.getSubmission(int(subId))
 		result = request.form
 		if 'form_name' in result and result['form_name'] == 'regrade':
 			''' REGRADE: ONLY ADMIN CAN REGRADE'''
@@ -153,11 +148,11 @@ def submission(subId):
 				submissionId = subId,
 				username = subDetails['username'], 
 				submissionTime = subDetails['submissionTime'],
-				language = language,
+				language = subDetails['language'],
 				problemType = problemInfo['problem_type']
 			)
 
-			time.sleep(2)
+			sleep(2)
 			return redirect(f"/submission/{subId}")
 		
 		''' RESUBMIT '''
@@ -174,18 +169,18 @@ def submission(subId):
 			form = request.form,
 			problemInfo = problemInfo,
 			userInfo = userInfo,
-			language = language
+			language = subDetails['language']
 		)
 
 		if response['status'] != 200:
 			flash(response['error'], "warning")
 			return redirect(f'/problem/{problemName}')
 
-		time.sleep(2)
+		sleep(2)
 		return redirect(f"/submission/{response['subId']}")
 
 	'''END RESUBMISSION'''
 
-	return render_template('submission.html',subDetails=subDetails,probleminfo=problemInfo, userinfo=userInfo,form=form,codes=codes,subtaskDetails=subtaskDetails)
+	return render_template('submission.html',subDetails=subDetails,probleminfo=problemInfo, userinfo=userInfo,form=form,subtaskDetails=subtaskDetails)
 
 #END: SUBMISSION -----------------------------------------------------------------------------------------------------------------------------------------------------

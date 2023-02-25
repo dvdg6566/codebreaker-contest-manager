@@ -27,12 +27,12 @@
 
 							<tr>
 									<th scope="row">Submission Time</th>
-									<td> {{subDetails.submissionTime}} </td>
+									<td class="timestamp"> {{subDetails.submissionTime}} </td>
 							</tr>
 							
 							<tr>
 								<th scope="row">Grading Time </th>
-								<td> {{subDetails.gradingCompleteTime}} </td>
+								<td class="timestamp"> {{subDetails.gradingCompleteTime}} </td>
 							</tr>
 
 							<tr>
@@ -61,7 +61,7 @@
 								<p> {{form.code(class = 'form-control', id = 'editor', maxLength = '50', innerHTML = code)}} </p>
 								<p id="submitButtonParagraph" hidden>  {{form.submit(class="btn btn-primary", onclick="onSubmit()")}} </p>
 							</form>
-							<p id="codestorage" hidden>{{codes.code}}</p>
+							<p id="codestorage" hidden>{{subDetails.code}}</p>
 						{% else %}
 							<form autocomplete="off" id = "submitCommunicationForm" action = "" method = "post" class = "form-group">
 								<p> {{probleminfo.nameA}}.cpp </p>
@@ -70,20 +70,20 @@
 								<p> {{form.codeB(class = 'form-control', id = 'editorB', maxLength = '50')}} </p>
 								<p id="submitFilesForm"> {{form.submit(class="btn btn-primary", onclick="onSubmit()")}} </p>
 							</form>
-							<p id="codestorageA" hidden>{{codes.codeA}}</p>
-							<p id="codestorageB" hidden>{{codes.codeB}}</p>
+							<p id="codestorageA" hidden>{{subDetails.codeA}}</p>
+							<p id="codestorageB" hidden>{{subDetails.codeB}}</p>
 						{% endif %}
 
 					{% elif userinfo.role == "admin"%}
 						<!-- Admins can view code -->
 						{% if probleminfo.problemType != 'Communication' %}
-							<textarea id='codebox'>{{codes.code}}</textarea> 
+							<textarea id='codebox'>{{subDetails.code}}</textarea> 
 						{% else %}
 							<p> {{probleminfo.nameA}}.cpp </p>
-							<textarea id='codeboxA'>{{codes.codeA}}</textarea>
+							<textarea id='codeboxA'>{{subDetails.codeA}}</textarea>
 							<br>
 							<p> {{probleminfo.nameB}}.cpp </p>
-							<textarea id='codeboxB'>{{codes.codeB}}</textarea>
+							<textarea id='codeboxB'>{{subDetails.codeB}}</textarea>
 						{% endif %}
 					{% else %}
 						<p id="codestorage" hidden></p>
@@ -170,7 +170,7 @@
 	{% if subDetails.gradingCompleteTime == '' %}
 	<meta http-equiv="refresh" content="2; URL=/submission/{{subDetails.subId}}">
 	{% endif %}
-
+	
 	<script>
 		$(document).ready(function(){
 			$('#submitCodeForm').submit(function(){

@@ -28,12 +28,12 @@ def getAllContestTimes():
     return contestTimes
 
 def getContestInfo(contestId):
-	response = contests_table.query(
-		KeyConditionExpression = Key('contestId').eq(contestId)
+	if contestId == '': return None
+	response = contests_table.get_item(
+		Key = {'contestId': contestId}
 	)
 	contest_info=response['Items']
-	if len(contest_info) == 0:
-		return None
+	if len(contest_info) == 0: return None
 	return contest_info[0]
 
 def updateContestInfo(contestId, info):
