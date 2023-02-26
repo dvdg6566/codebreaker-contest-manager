@@ -28,7 +28,11 @@ def editUserTable():
         for user in contestUsers:
             if user not in usernames: return {'status':300, 'error': 'Invalid username!'}
 
-        resp = awstools.users.setContest(usernames=contestUsers, contestId=contestId)
+        failusers = awstools.contests.setContest(usernames=contestUsers, contestId=contestId)
+        if len(failusers):
+            error = "The following users have already began their contest: " + ', '.join(failusers)
+            return {'status': 300, 'error': error}
+
         return {'status': 200}
     elif operation == 'EDIT_USER':
         pass

@@ -56,31 +56,6 @@ def createUser(username, role, fullname='', email='', label=''):
     }
     users_table.put_item(Item = newUserInfo)
 
-# Sets all the users to have contestId
-# Returns list of fail operations: if any of the users have already participated in contest
-def setContest(usernames, contestId):
-    contestTimes = contests.getAllContestTimes()
-    curtime = datetime.utcnow()
-
-    usersInfo = awshelper.batchGetItems(f'{judgeName}-users', usernames, 'username')
-    failUsers = [] # Users that can't be updated
-    for user in usersInfo:
-        fail = 0
-        if user['contest'] != '':
-            userContestId = user['contest']
-            if userContestId in contestTimes and contestTimes[userContestId]['startTime'] < curtime: 
-                fail = 1
-        if fail: 
-            failUsers.append(user['username'])
-        else:
-            users_table.update_item(
-                Key = {'username': user['username']},
-                UpdateExpression = f'set #a=:a',
-                ExpressionAttributeNames = {'#a': 'contest'},
-                ExpressionAttributeValues = {':a': contestId}
-            )
-    return failUsers
-
 def judgeAccess(userInfo):
     if userInfo['role'] == 'admin':
         return True

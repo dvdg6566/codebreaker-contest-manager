@@ -8,6 +8,7 @@ dynamodb = boto3.resource('dynamodb')
 
 judgeName = os.environ.get('JUDGE_NAME')
 contests_table = dynamodb.Table(f'{judgeName}-contests')
+users_table = dynamodb.Table(f'{judgeName}-users')
 
 # Helper function to convert contest timing to UTC timestring and define status of contest
 def getContestStatus(contest):
@@ -39,17 +40,17 @@ def getAllContestInfo():
 
 # gets all start times (in UTC) when adding users into contests
 def getAllContestTimes():
-    contestsInfo = awshelper.scan(
-    	table=contests_table, 
-    	ProjectionExpression='contestId, startTime, endTime'
-    )
-    contestTimes = {}
-    for contest in contestsInfo:
-        contestTimes[contest['contestId']] = {
-        	'startTime': datetime.strptime(contest['startTime'], "%Y-%m-%d %X"),
-        	'endTime': datetime.strptime(contest['endTime'], "%Y-%m-%d %X")
-       	}
-    return contestTimes
+	contestsInfo = awshelper.scan(
+		table=contests_table, 
+		ProjectionExpression='contestId, startTime, endTime'
+	)
+	contestTimes = {}
+	for contest in contestsInfo:
+		contestTimes[contest['contestId']] = {
+			'startTime': datetime.strptime(contest['startTime'], "%Y-%m-%d %X"),
+			'endTime': datetime.strptime(contest['endTime'], "%Y-%m-%d %X")
+		}
+	return contestTimes
 
 def getContestInfo(contestId):
 	if contestId == '': return None
@@ -74,6 +75,32 @@ def updateContestTable(contestId, info):
 		UpdateExpression = f'set startTime=:a, endTime=:b',
 		ExpressionAttributeValues={':a':info['startTime'],':b':info['endTime']}
 	)
+
+# Sets all the users to have contestId
+# Returns list of fail operations: if any of the users have already participated in contest
+def setContest(usernames, contestId):
+	print(usernames, contestId)
+	contestTimes = getAllContestTimes()
+	curtime = datetime.utcnow()
+
+	usersInfo = awshelper.batchGetItems(f'{judgeName}-users', usernames, 'username')
+	failUsers = [] # Users that can't be updated
+	for user in usersInfo:
+		fail = 0
+		if user['contest'] != '':
+			userContestId = user['contest']
+			if userContestId in contestTimes and contestTimes[userContestId]['startTime'] < curtime: 
+				fail = 1
+		if fail: 
+			failUsers.append(user['username'])
+		else:
+			users_table.update_item(
+				Key = {'username': user['username']},
+				UpdateExpression = f'set #a=:a',
+				ExpressionAttributeNames = {'#a': 'contest'},
+				ExpressionAttributeValues = {':a': contestId}
+			)
+	return failUsers
 
 def createContest(contestId):
 	info = {}

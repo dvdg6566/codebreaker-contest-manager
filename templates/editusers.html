@@ -114,6 +114,7 @@
 			$.post('/admin/editusertable',params).done((response) => {
 				if (response.status !== 200){
 					alert(response.error);
+					location.reload();
 				}else{
 					alert('Success!');
 					location.reload();
