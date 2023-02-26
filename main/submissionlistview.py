@@ -30,9 +30,13 @@ def submissionlist():
 			flash("This resource is only accessible during contests!", "warning")
 			return redirect('/')
 
-	# Force redirect back to your own submissions
-	if userInfo['role'] == 'member' and userInfo['username'] != username:
-		return redirect(f'/submissions?username={userInfo["username"]}&problem={problem if problem else ""}')
+		if username != userInfo['username']:
+			flash("You can only view your own submissions!", "warning")
+			return redirect(f'/submissions?username={userInfo["username"]}')
+
+		if problem != None and problem not in contestInfo['problems']:
+			flash ("You may only view contest problems!", "warning")
+			return redirect(f'/submissions?username={userInfo["username"]}')
 	
 	if username == "":username = None
 	if problem == "":problem = None
