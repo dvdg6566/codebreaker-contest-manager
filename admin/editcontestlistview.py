@@ -61,9 +61,7 @@ def editcontestlist():
 
 	for contest in contestsInfo:
 		contest['users'] = contestUsers[contest['contestId']]
-		contest['startTime'] = datetime.strptime(contest['startTime'], "%Y-%m-%d %X")
-		contest['endTime'] = datetime.strptime(contest['endTime'], "%Y-%m-%d %X")
-
+		
 		# Convert Start and end time from GMT time to local time
 		contest['startTime'] += timedelta(hours=TIMEZONE_OFFSET)
 		contest['endTime'] += timedelta(hours=TIMEZONE_OFFSET)

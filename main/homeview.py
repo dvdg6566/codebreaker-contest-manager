@@ -11,17 +11,7 @@ def home():
 
 	contestinfo = awstools.contests.getContestInfo(contestId = userinfo['contest'])
 	if contestinfo == None: # No registered contest
-		return render_template("home.html", userinfo=userinfo, contestinfo=None)		
-	
-	startTime = datetime.strptime(contestinfo['startTime'], "%Y-%m-%d %X")
-	endTime = datetime.strptime(contestinfo['endTime'], "%Y-%m-%d %X")
-	curTime = datetime.utcnow()
-	if curTime > endTime:
-		contestinfo['status'] = 'ENDED'
-	elif curTime <= endTime and curTime >= startTime:
-		contestinfo['status'] = 'ONGOING'
-	else:
-		contestinfo['status'] = 'NOT_STARTED'
+		return render_template("home.html", userinfo=userinfo, contestinfo=None)
 
 	problemNames = contestinfo['problems']
 	problems = []

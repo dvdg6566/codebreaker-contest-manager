@@ -9,16 +9,38 @@ dynamodb = boto3.resource('dynamodb')
 judgeName = os.environ.get('JUDGE_NAME')
 contests_table = dynamodb.Table(f'{judgeName}-contests')
 
+# Helper function to convert contest timing to UTC timestring and define status of contest
+def getContestStatus(contest):
+	contest['endTime'] = datetime.strptime(contest['endTime'], "%Y-%m-%d %X")
+	contest['startTime'] = datetime.strptime(contest['startTime'], "%Y-%m-%d %X")
+	curTime = datetime.utcnow()
+
+	if curTime > contest['endTime']:
+		contest['status'] = 'ENDED'
+	elif curTime <= contest['endTime'] and curTime >= contest['startTime']:
+		contest['status'] = 'ONGOING'
+	else:
+		contest['status'] = 'NOT_STARTED'
+
 def getAllContestIds():
-	contestIds = awshelper.scan(contests_table, ProjectionExpression='contestId')
+	contestIds = awshelper.scan(
+		table=contests_table, 
+		ProjectionExpression='contestId'
+	)
 	return [i['contestId'] for i in contestIds]
 
 def getAllContestInfo():
-	return awshelper.scan(contests_table)
+	contestsInfo = awshelper.scan(contests_table)
+	for contest in contestsInfo:
+		contest = getContestStatus(contest)
+	return contestsInfo
 
-# gets all start times when adding users into contests
+# gets all start times (in UTC) when adding users into contests
 def getAllContestTimes():
-    contestsInfo = getAllContestInfo()
+    contestsInfo = awshelper.scan(
+    	table=contests_table, 
+    	ProjectionExpression='contestId, startTime, endTime'
+    )
     contestTimes = {}
     for contest in contestsInfo:
         contestTimes[contest['contestId']] = {
@@ -32,9 +54,10 @@ def getContestInfo(contestId):
 	response = contests_table.get_item(
 		Key = {'contestId': contestId}
 	)
-	contest_info=response['Items']
-	if len(contest_info) == 0: return None
-	return contest_info[0]
+	if 'Item' not in response: return None	
+	contest = response['Item']
+	
+	return getContestStatus(contest)
 
 def updateContestInfo(contestId, info):
 	contests_table.update_item(

@@ -21,6 +21,8 @@ import awstools
 
 #print(a,b,c)
 
-p = awstools.cognito.createUser('test23', 'member')['password']
-print(awstools.cognito.authenticate('test23', p))
-print(p)
+# p = awstools.cognito.createUser('test23', 'member')['password']
+# print(awstools.cognito.authenticate('test23', p))
+# print(p)
+
+print(awstools.contests.getAllContestTimes())
