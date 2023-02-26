@@ -25,6 +25,9 @@ def editcontesttimes():
 	except ValueError:
 		return {'status':300, 'error':'Invalid datetime format'}
 
+	if endTime < startTime:
+		return {'status':300, 'error':'Start Time cannot be before End Time!'}		
+
 	# Convert Start and end time from local time to GMT time
 	startTime -= timedelta(hours=TIMEZONE_OFFSET)
 	endTime -= timedelta(hours=TIMEZONE_OFFSET)
