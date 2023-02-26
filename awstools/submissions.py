@@ -2,6 +2,7 @@
 import os
 import json
 import boto3
+from datetime import datetime
 from boto3.dynamodb.conditions import Key, Attr
 
 s3 = boto3.client('s3')
@@ -19,9 +20,13 @@ subPerPage = 25
 # Submission View page: Gets all details to do with submission 
 def getSubmission(subId):
 	response= submissions_table.get_item( Key={ "subId": subId } )
-	
 	if 'Item' not in response.keys(): return None
 	subDetails = response['Item']
+
+	subDetails['submissionTime'] = datetime.strptime(subDetails['submissionTime'], "%Y-%m-%d %X")
+	if subDetails['gradingCompleteTime'] != '':
+		subDetails['gradingCompleteTime'] = datetime.strptime(subDetails['gradingCompleteTime'], "%Y-%m-%d %X")
+
 	if subDetails['language'] == 'py':
 		pyfile = s3.get_object(Bucket=SUBMISSIONS_BUCKET_NAME, Key=f'source/{subId}.py')
 		code = pyfile['Body'].read().decode("utf-8")

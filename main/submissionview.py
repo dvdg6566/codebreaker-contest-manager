@@ -13,13 +13,6 @@ def submission(subId):
 	userInfo = awstools.users.getCurrentUserInfo()
 	if userInfo == None: return redirect(url_for("login", next=request.url))
 
-	# ACCESS CONTROL
-	if userInfo['role'] == 'member': 
-		contestInfo = awstools.contests.getContestInfo(userInfo['contest'])
-		if contestInfo == None or contestInfo['status'] != 'ONGOING':
-			flash("This resource is only accessible during contests!", "warning")
-			return redirect('/')
-
 	if not subId.isdigit():
 		flash("Sorry, the submission you're looking for doesn't exist", "warning")
 		return redirect('/')
@@ -29,9 +22,24 @@ def submission(subId):
 		flash ("Sorry, the submission you're looking for doesn't exist.", "warning")
 		return redirect('/')
 
-	if userInfo['role'] != 'admin' and userInfo['username'] != subDetails['username']:
-		flash ("You do not have access to this resource!", "warning")
-		return redirect('/')
+	# ACCESS CONTROL
+	if userInfo['role'] == 'member':
+		contestInfo = awstools.contests.getContestInfo(userInfo['contest'])
+		if contestInfo == None or contestInfo['status'] != 'ONGOING':
+			flash("This resource is only accessible during contests!", "warning")
+			return redirect('/')
+
+		if userInfo['username'] != subDetails['username']:
+			flash ("You do not have access to this resource!", "warning")
+			return redirect('/')
+
+		if subDetails['problemName'] not in contestInfo['problems']:
+			flash("You do not have access to submissions outside of the contest!", "warning")
+			return redirect('/')
+
+		if subDetails['submissionTime'] < contestInfo['startTime']:
+			flash("You do not have access to submissions outside of the contest window!", "warning")
+			return redirect('/')	
 
 	# Format and round floats
 	def formatFloat(x):
@@ -44,13 +52,13 @@ def submission(subId):
 	problemInfo = awstools.problems.getProblemInfo(problemName)
 
 	# Convert into specific imezone
-	def convertToLocalTimezone(timestring, offset):
-		if timestring == '': return ''
-		timestamp = datetime.strptime(timestring, "%Y-%m-%d %X")
+	def convertToLocalTimezone(timestamp, offset):
+		if timestamp == '': return ''
 		timestamp += timedelta(hours=offset)
 		newTimestring = timestamp.strftime("%Y-%m-%d %X")
 		newTimestring += f' (GMT+{offset})' if offset >= 0 else f' (GMT{offset})'
 		return newTimestring
+		
 	subDetails['submissionTime'] = convertToLocalTimezone(subDetails['submissionTime'], TIMEZONE_OFFSET)
 	subDetails['gradingCompleteTime'] = convertToLocalTimezone(subDetails['gradingCompleteTime'], TIMEZONE_OFFSET)
 

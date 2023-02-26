@@ -19,6 +19,10 @@ def problem(problemName):
 			flash("This resource is only accessible during contests!", "warning")
 			return redirect('/')
 
+		if problemName not in contestInfo['problems']:
+			flash("You are not allowed to access this resource!", "warning")
+			return redirect('/')
+
 	form = SubmitForm()
 
 	form.language.choices = list(languages.keys())
