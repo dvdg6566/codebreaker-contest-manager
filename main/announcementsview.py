@@ -12,6 +12,13 @@ def announcements():
 	userInfo=awstools.users.getCurrentUserInfo()
 	if userInfo == None: return redirect(url_for("login", next=request.url))
 
+	# ACCESS CONTROL
+	if userInfo['role'] == 'member': 
+		contestInfo = awstools.contests.getContestInfo(userInfo['contest'])
+		if contestInfo == None or contestInfo['status'] != 'ONGOING':
+			flash("This resource is only accessible during contests!", "warning")
+			return redirect('/')
+
 	announcementsInfo = awstools.announcements.getAllAnnouncements()
 	for announcement in announcementsInfo:
 		timestamp = datetime.strptime(announcement['announcementTime'], "%Y-%m-%d %X")

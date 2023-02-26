@@ -13,8 +13,12 @@ def submission(subId):
 	userInfo = awstools.users.getCurrentUserInfo()
 	if userInfo == None: return redirect(url_for("login", next=request.url))
 
-	# if not awstools.users.judgeAccess(userInfo):
-	# return redirect('/')
+	# ACCESS CONTROL
+	if userInfo['role'] == 'member': 
+		contestInfo = awstools.contests.getContestInfo(userInfo['contest'])
+		if contestInfo == None or contestInfo['status'] != 'ONGOING':
+			flash("This resource is only accessible during contests!", "warning")
+			return redirect('/')
 
 	if not subId.isdigit():
 		flash("Sorry, the submission you're looking for doesn't exist", "warning")

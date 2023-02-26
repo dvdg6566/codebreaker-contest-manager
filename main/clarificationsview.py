@@ -11,8 +11,14 @@ TIMEZONE_OFFSET = int(os.environ.get('TIMEZONE_OFFSET'))
 def clarifications():
 	userInfo=awstools.users.getCurrentUserInfo()
 	if userInfo == None: return redirect(url_for("login", next=request.url))
-
 	username = userInfo['username']
+
+	# ACCESS CONTROL
+	if userInfo['role'] == 'member': 
+		contestInfo = awstools.contests.getContestInfo(userInfo['contest'])
+		if contestInfo == None or contestInfo['status'] != 'ONGOING':
+			flash("This resource is only accessible during contests!", "warning")
+			return redirect('/')
 
 	# Get list of clarifications to display
 	if userInfo['role'] == 'admin':

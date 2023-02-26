@@ -12,7 +12,12 @@ def problem(problemName):
 	userInfo = awstools.users.getCurrentUserInfo()
 	if userInfo == None: return redirect(url_for("login", next=request.url))
 
-	# TODO: Do authentication on whether user allowed to view problem
+	# ACCESS CONTROL
+	if userInfo['role'] == 'member': 
+		contestInfo = awstools.contests.getContestInfo(userInfo['contest'])
+		if contestInfo == None or contestInfo['status'] != 'ONGOING':
+			flash("This resource is only accessible during contests!", "warning")
+			return redirect('/')
 
 	form = SubmitForm()
 
