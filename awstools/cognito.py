@@ -36,7 +36,7 @@ def authenticate(username, password):
 		else:
 			return {'status':400}
 
-def createUser (username, role, email=''):
+def createUser (username, role):
 	response = client.admin_create_user(
 		UserPoolId = userPoolId,
 		Username = username
@@ -55,3 +55,15 @@ def createUser (username, role, email=''):
 	users.createUser(username=username, role=role)
 
 	return {'status': 200, 'password': password}
+
+def resetPassword (username):
+	password = generateSecurePassword()
+
+	response = client.admin_set_user_password(
+	    UserPoolId=userPoolId,
+	    Username=username,
+	    Password=password,
+	    Permanent=True
+	)
+
+	return {'stauts': 200, 'password': password}

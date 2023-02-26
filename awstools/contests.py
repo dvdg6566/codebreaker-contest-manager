@@ -22,6 +22,8 @@ def getContestStatus(contest):
 	else:
 		contest['status'] = 'NOT_STARTED'
 
+	return contest
+
 def getAllContestIds():
 	contestIds = awshelper.scan(
 		table=contests_table, 

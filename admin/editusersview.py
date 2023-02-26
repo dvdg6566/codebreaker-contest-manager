@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, url_for, redirect, flash, ses
 
 import json
 import awstools
+from datetime import datetime
 
 def editUserTable():
     userInfo = awstools.users.getCurrentUserInfo()
@@ -9,17 +10,21 @@ def editUserTable():
     if userInfo == None or userInfo['role'] != 'admin':
         return {'status':300,'error':'Access to resource denied'}
 
-    print(request.form)
     operation = request.form.get('operation')
     # Adding users to contest
     if operation == 'ADD_USERS_TO_CONTEST':
         contestUsers = json.loads(request.form.get('usernames'))
         contestId = request.form.get('contestId')
-
+        
         contestIds = awstools.contests.getAllContestIds()
-        usernames = [i['username'] for i in awstools.users.getAllUsernames()]
+        if contestId not in contestIds:
+            return {'status':300, 'error': 'Invalid Contest Id!'}
 
-        if contestId not in contestIds: return {'status':300, 'error': 'Invalid Contest Id!'}
+        contestInfo = awstools.contests.getContestInfo(contestId)
+        if datetime.utcnow() > contestInfo['endTime']:
+            return {'status':300, 'error': 'Contest alrready over!'}
+
+        usernames = [i['username'] for i in awstools.users.getAllUsernames()]
         for user in contestUsers:
             if user not in usernames: return {'status':300, 'error': 'Invalid username!'}
 
@@ -40,10 +45,6 @@ def editusers():
     allUsersInfo = awstools.users.getAllUsers()
     
     contestIds = awstools.contests.getAllContestIds()
-    # allUsersInfo = [dict((key,value) for key, value in U.items() if key in ['username','fullname','school','role', 'nation']) for U in users] #impt info goes into the list (key in [list]) 
-    # allUsersInfo = [user for user in allUsersInfo if 'fullname' in user.keys()]
-    # allUsersInfo = [user for user in allUsersInfo if user['fullname'] != "" and user['username'] != ""]
-    # allUsersInfo.sort(key=lambda x:x['fullname'])
 
     return render_template('editusers.html',userinfo=userInfo,allusersinfo=allUsersInfo,contestIds=contestIds)
 

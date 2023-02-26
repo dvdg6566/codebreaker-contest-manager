@@ -114,28 +114,28 @@
 				var startTime = new Date(rowvalues[3]);
 				var endTime = new Date(rowvalues[4]);
 
-				if (isNaN(startTime) || isNaN(endTime)){
-					alert("Invalid Time!")
-					return;
-				}else if (startTime > endTime){
-					alert("Start Time cannot be before End Time!")
-					return;
-				}
+				// if (isNaN(startTime) || isNaN(endTime)){
+				// 	alert("Invalid Time!")
+				// 	return;
+				// }else if (startTime > endTime){
+				// 	alert("Start Time cannot be before End Time!")
+				// 	return;
+				// }
 
-				// update valid time
-				let duration = endTime - startTime;
-				let dateObj = new Date(duration);
-				let hhmmssFormat = dateObj.toISOString().substr(11, 8);
-				let days = Math.floor(dateObj.getTime() / (1000*3600*24));
-				// updateds row HTML
-				let htmlString = "<tt>" 
-				if (days > 0){
-					htmlString += days + " day"
-					if (days > 1){htmlString += "s"}
-					htmlString += ", "
-				}
-				htmlString +=  hhmmssFormat + "</tt>"
-				row.find(".dur").html(htmlString);
+				// // update valid time
+				// let duration = endTime - startTime;
+				// let dateObj = new Date(duration);
+				// let hhmmssFormat = dateObj.toISOString().substr(11, 8);
+				// let days = Math.floor(dateObj.getTime() / (1000*3600*24));
+				// // updateds row HTML
+				// let htmlString = "<tt>" 
+				// if (days > 0){
+				// 	htmlString += days + " day"
+				// 	if (days > 1){htmlString += "s"}
+				// 	htmlString += ", "
+				// }
+				// htmlString +=  hhmmssFormat + "</tt>"
+				// row.find(".dur").html(htmlString);
 
 				// enable edit button
 				row.find(".editable").attr("contenteditable", false);

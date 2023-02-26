@@ -25,4 +25,6 @@ import awstools
 # print(awstools.cognito.authenticate('test23', p))
 # print(p)
 
-print(awstools.contests.getAllContestTimes())
+# print(awstools.contests.getAllContestTimes())
+
+print(awstools.cognito.resetPassword('0rang3'))
