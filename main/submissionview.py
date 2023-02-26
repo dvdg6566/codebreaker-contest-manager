@@ -7,7 +7,13 @@ from time import sleep
 from datetime import datetime, timedelta
 
 TIMEZONE_OFFSET = int(os.environ.get('TIMEZONE_OFFSET'))
-#BEGIN: SUBMISSION -----------------------------------------------------------------------------------------------------------------------------------------------------
+# Convert into specific timezone
+def convertToLocalTimezone(timestamp, offset):
+	if timestamp == '': return ''
+	timestamp += timedelta(hours=offset)
+	newTimestring = timestamp.strftime("%Y-%m-%d %X")
+	newTimestring += f' (GMT+{offset})' if offset >= 0 else f' (GMT{offset})'
+	return newTimestring
 
 def submission(subId):
 	userInfo = awstools.users.getCurrentUserInfo()
@@ -39,7 +45,8 @@ def submission(subId):
 
 		if subDetails['submissionTime'] < contestInfo['startTime']:
 			flash("You do not have access to submissions outside of the contest window!", "warning")
-			return redirect('/')	
+			return redirect('/')
+			# No need to check for endtime since the submission can't be from the future
 
 	# Format and round floats
 	def formatFloat(x):
@@ -50,14 +57,6 @@ def submission(subId):
 	problemName = subDetails['problemName']
 	username = subDetails['username']
 	problemInfo = awstools.problems.getProblemInfo(problemName)
-
-	# Convert into specific imezone
-	def convertToLocalTimezone(timestamp, offset):
-		if timestamp == '': return ''
-		timestamp += timedelta(hours=offset)
-		newTimestring = timestamp.strftime("%Y-%m-%d %X")
-		newTimestring += f' (GMT+{offset})' if offset >= 0 else f' (GMT{offset})'
-		return newTimestring
 		
 	subDetails['submissionTime'] = convertToLocalTimezone(subDetails['submissionTime'], TIMEZONE_OFFSET)
 	subDetails['gradingCompleteTime'] = convertToLocalTimezone(subDetails['gradingCompleteTime'], TIMEZONE_OFFSET)

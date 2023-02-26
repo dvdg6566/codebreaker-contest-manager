@@ -72,9 +72,12 @@ def batchGetSubmissions(start, end):
 		},
 		ReturnConsumedCapacity='TOTAL'
 	)
+
 	return response
 
-def getSubmissionsList(pageNo, problem, username): 
+def getSubmissionsList(pageNo, problem, username):
+	submissions = []
+
 	# All submissions: Calculate range of indeces and use batch get
 	if username == None and problem == None:
 		latest = int(getNumberOfSubmissions())
@@ -86,7 +89,6 @@ def getSubmissionsList(pageNo, problem, username):
 
 		response = batchGetSubmissions(start,end)
 		submissions = response['Responses'][f'{judgeName}-submissions']
-		return submissions
 
 	# When username of problem is being filtered, use global secondary index to filter
 	elif username != None and problem == None:
@@ -98,7 +100,7 @@ def getSubmissionsList(pageNo, problem, username):
 			ExpressionAttributeNames = {'#a': 'language'},
 			ScanIndexForward = False
 		)
-		return response['Items']
+		submissions = response['Items']
 	elif username == None and problem != None:
 		response = submissions_table.query(
 			IndexName = 'problemIndex',
@@ -108,7 +110,7 @@ def getSubmissionsList(pageNo, problem, username):
 			Limit = (pageNo+1)*subPerPage + 2,
 			ScanIndexForward = False
 		)
-		return response['Items']
+		submissions = response['Items']
 
 	# When nothing filtered: Use problem index to filter and sub-filter by username
 	else:
@@ -120,6 +122,11 @@ def getSubmissionsList(pageNo, problem, username):
 			FilterExpression = Attr('username').eq(username),
 			ScanIndexForward = False
 		)
-		return response['Items']
+		submissions = response['Items']
+
+	for submission in submissions:
+		submission['submissionTime'] = datetime.strptime(submission['submissionTime'], "%Y-%m-%d %X")
+
+	return submissions
 
 ''' END: SUBMISSION PAGE '''

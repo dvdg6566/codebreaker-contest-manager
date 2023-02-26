@@ -1,9 +1,20 @@
 from flask import render_template, session, request, redirect, flash, url_for
 from forms import searchSubmissionForm
 
+import os
 import awstools
 import language
 from math import ceil
+from datetime import datetime, timedelta
+
+TIMEZONE_OFFSET = int(os.environ.get('TIMEZONE_OFFSET'))
+# Convert into specific timezone
+def convertToLocalTimezone(timestamp, offset):
+	if timestamp == '': return ''
+	timestamp += timedelta(hours=offset)
+	newTimestring = timestamp.strftime("%Y-%m-%d %X")
+	newTimestring += f' (GMT+{offset})' if offset >= 0 else f' (GMT{offset})'
+	return newTimestring
 
 def submissionlist():
 	pageNo = request.args.get('page')
@@ -47,18 +58,31 @@ def submissionlist():
 	else:
 		submissionList = awstools.submissions.getSubmissionsList(pageNo, problem, username)
 		maxSub = len(submissionList)
-	print(maxSub)
 	
 	subPerPage = awstools.submissions.subPerPage
 	submissionList.sort(key = lambda x:x['subId'], reverse=True)
-	if username != None or problem != None:
-		submissionList = submissionList[(pageNo-1)*subPerPage : min(len(submissionList), pageNo*subPerPage)]
+
+	# Filter away submissions from before contest
+	if userInfo['role'] == 'member':
+		# submissionList = [submission for submission in submissionList]
+		submissionList = [ \
+			submission for submission in submissionList \
+			if submission['submissionTime'] >= contestInfo['startTime']
+		]
+
+	# Conversion of timezone
+	for submission in submissionList:
+		submission['submissionTime'] = convertToLocalTimezone(submission['submissionTime'], TIMEZONE_OFFSET)
 
 	# If submission is compile error, then max time and memory should be N/A 
 	for submission in submissionList:
 		if 'compileErrorMessage' in submission.keys():
 			submission['maxTime'] = 'N/A'
 			submission['maxMemory'] = 'N/A'
+
+	# Pagination
+	if username != None or problem != None:
+		submissionList = submissionList[(pageNo-1)*subPerPage : min(len(submissionList), pageNo*subPerPage)]
 
 	maxPage = ceil(maxSub / subPerPage)
 	pages = range(max(1, pageNo-1), min(maxPage+1, pageNo+3)) 
