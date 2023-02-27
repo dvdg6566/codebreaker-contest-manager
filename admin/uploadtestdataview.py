@@ -1,7 +1,12 @@
 from flask import Flask, render_template, request, url_for, redirect, flash, session, get_flashed_messages, make_response, send_file
 
+import os
 import json
 import awstools
+
+# Gets judgename, region from environment variables
+judgeName = os.environ.get('JUDGE_NAME')
+AWS_REGION = os.environ.get('AWS_REGION')
 
 def uploadtestdata(problemId):
 	userInfo = awstools.users.getCurrentUserInfo()
@@ -16,6 +21,8 @@ def uploadtestdata(problemId):
 		return redirect('/')
 
 	credentials = awstools.sts.getTokens(problemId)
+	credentials['bucketName'] = f'{judgeName}-testdata'
+	credentials['bucketRegion'] = f'{AWS_REGION}'
 	credentials = json.dumps(credentials)
 
 	return render_template('uploadtestdata.html', userinfo=userInfo, probleminfo=problemInfo, stsKeys=credentials)

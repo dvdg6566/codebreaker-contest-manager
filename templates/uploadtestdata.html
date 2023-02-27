@@ -19,8 +19,8 @@
 
 <script>
   var keys = JSON.parse({{ stsKeys | tojson }});
-  var testdataBucketName = "codebreakercontest-testdata";
-  var bucketRegion = "ap-southeast-1";
+  var testdataBucketName = keys.bucketName;
+  var bucketRegion = keys.bucketRegion;
   var accessKeyId = keys.accessKeyId;
   var secretAccessKey = keys.secretAccessKey;
   var sessionToken = keys.sessionToken;
@@ -96,18 +96,5 @@
     }
   }
 </script>
-
-<style> 
-#myProgress {
-  width: 100%;
-  background-color: grey;
-}
-
-#myBar {
-  width: 1%;
-  height: 30px;
-  background-color: green;
-}
-</style>
 
 {% endblock %}
