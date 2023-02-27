@@ -8,9 +8,9 @@ import awstools
 judgeName = os.environ.get('JUDGE_NAME')
 AWS_REGION = os.environ.get('AWS_REGION')
 
-def uploadtestdata(problemId):
+def uploadtestdata(problemName):
 	userInfo = awstools.users.getCurrentUserInfo()
-	problemInfo = awstools.problems.getProblemInfo(problemId)
+	problemInfo = awstools.problems.getProblemInfo(problemName)
 
 	if problemInfo == None:
 		flash('This problem does not exist', 'warning')
@@ -20,7 +20,7 @@ def uploadtestdata(problemId):
 		flash ('You are not authorised to view this resource!', 'danger')
 		return redirect('/')
 
-	credentials = awstools.sts.getTokens(problemId)
+	credentials = awstools.sts.getTokens(problemName)
 	credentials['bucketName'] = f'{judgeName}-testdata'
 	credentials['bucketRegion'] = f'{AWS_REGION}'
 	credentials = json.dumps(credentials)

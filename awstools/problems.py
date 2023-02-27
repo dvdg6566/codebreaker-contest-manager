@@ -20,6 +20,7 @@ GRADERS_BUCKET_NAME = f'{judgeName}-graders'
 CHECKERS_BUCKET_NAME = f'{judgeName}-checkers'
 TESTDATA_BUCKET_NAME = f'{judgeName}-testdata'
 PROBLEM_VALIDATION_LAMBDA_NAME = f'arn:aws:lambda:{region}:{accountId}:function:{judgeName}-problem-validation'
+COMPILER_LAMBDA_NAME = f'arn:aws:lambda:{region}:{accountId}:function:{judgeName}-compiler'
 REGRADE_PROBLEM_LAMBDA_NAME = f'arn:aws:lambda:{region}:{accountId}:function:{judgeName}-regrade-problem'
 
 def getAllProblems():
@@ -86,10 +87,6 @@ def deleteStatement(statementName):
 def uploadStatement(statement, s3Name):
     s3.upload_fileobj(statement, STATEMENTS_BUCKET_NAME, s3Name, ExtraArgs={"ContentType":statement.content_type})
 
-def updateCount(problemName):
-    lambda_input = {"problemName": problemName}
-    res = lambda_client.invoke(FunctionName = 'arn:aws:lambda:ap-southeast-1:354145626860:function:codebreaker-update-testcaseCount', InvocationType='RequestResponse', Payload = json.dumps(lambda_input))
-
 def updateSubtaskInfo(problemName, info):
     problems_table.update_item(
         Key = {'problemName' : problemName},
@@ -97,15 +94,21 @@ def updateSubtaskInfo(problemName, info):
         ExpressionAttributeValues={':a':info['subtaskScores'], ':b':info['subtaskDependency']}
     )
 
+def uploadChecker(checker, s3Name):
+    s3.upload_fileobj(checker, CHECKERS_BUCKET_NAME, s3Name)
+
+def compileChecker(problemName):
+    lambda_input = {"problemName": problemName, "eventType": "CHECKER"}
+    res = lambda_client.invoke(FunctionName = COMPILER_LAMBDA_NAME, InvocationType='RequestResponse', Payload = json.dumps(lambda_input))
+    output = json.loads(res['Payload'].read().decode("utf-8"))
+    return output
+
 def updateEditorialInfo(problemName, info):
     problems_table.update_item(
         Key = {'problemName': problemName},
         UpdateExpression = f'set editorials=:a',
         ExpressionAttributeValues = {':a':info['editorials']}
     )
-
-def uploadCompiledChecker(sourceName, uploadTarget):
-    s3.upload_file(sourceName, CHECKERS_BUCKET_NAME, uploadTarget)
 
 def uploadGrader(sourceName, uploadTarget):
     s3.upload_fileobj(sourceName, GRADERS_BUCKET_NAME, uploadTarget)

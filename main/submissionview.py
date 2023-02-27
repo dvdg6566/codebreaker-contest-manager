@@ -158,7 +158,7 @@ def submission(subId):
 				problemName = problemName,
 				submissionId = subId,
 				username = subDetails['username'], 
-				submissionTime = subDetails['submissionTime'],
+				submissionTime = subDetails['submissionTime'].strftime("%Y-%m-%d %X"),
 				language = subDetails['language'],
 				problemType = problemInfo['problem_type']
 			)
