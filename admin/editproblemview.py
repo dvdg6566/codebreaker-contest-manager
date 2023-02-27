@@ -36,7 +36,7 @@ def editproblem(problemId):
             problemInfo['nameB'] = 'placeholderA'
 
     form = updateProblemForm()
-    form.problem_type.choices = ["Batch", "Communcation", "Interactive"]
+    form.problem_type.choices = ["Batch", "Communication", "Interactive"]
     form.problem_type.choices.remove(problemInfo['problem_type'])
     form.problem_type.choices.insert(0,problemInfo['problem_type'])
 

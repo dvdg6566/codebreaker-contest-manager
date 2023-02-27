@@ -2,7 +2,6 @@ import os
 import boto3
 import json
 from time import sleep
-from uuid import uuid4
 from botocore.exceptions import ClientError
 
 iam_client = boto3.client('iam')
