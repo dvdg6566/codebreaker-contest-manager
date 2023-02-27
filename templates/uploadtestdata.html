@@ -53,7 +53,18 @@
     var files = document.getElementById("uploadFiles").files;
     pendingFiles = [];
     for (var i = 0; i < files.length; i++){
-      pendingFiles.push(files[i].name);
+      var fileName = files[i].name;
+      if (files[i].size > 128*1024*1024){
+        alert("Error! One of your files is too large!")
+        return {}
+      }
+      var match = fileName.match('[0-9]+[\\.](in|out)');
+      if (match === null){
+        alert("Invalid File Name!");
+        return {}
+      }
+
+      pendingFiles.push(fileName);
     }
 
     if (!files.length) {
@@ -79,20 +90,17 @@
 
       var promise = upload.promise();
 
-      promise.then(
-        function(data) {
-          var key = data.key;
-          var filename = key.split('/')[1];
-          var index = pendingFiles.indexOf(filename);
-          if (index > -1){
-            pendingFiles.splice(index,1);
-          }
-          updateStatus();
-        },
-        function(err) {
-          console.log(err)
+      promise.then((data) => {
+        var key = data.key;
+        var filename = key.split('/')[1];
+        var index = pendingFiles.indexOf(filename);
+        if (index > -1){
+          pendingFiles.splice(index,1);
         }
-      );
+        updateStatus();
+      }, (err) => {
+        console.log(err);
+      });
     }
   }
 </script>
