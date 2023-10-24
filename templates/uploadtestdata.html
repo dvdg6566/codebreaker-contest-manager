@@ -58,9 +58,18 @@
         alert("Error! One of your files is too large!")
         return {}
       }
-      var match = fileName.match('[0-9]+[\\.](in|out)');
+
+      // Matching for <number>.in/out
+      var match = fileName.match('^[0-9]+[\\.](in|out)$');
       if (match === null){
-        alert("Invalid File Name!");
+        alert("Invalid File Name: " + fileName);
+        return {}
+      }
+
+      // Match filename for 0.in or out
+      var match2 = fileName.match('^0\\.(in|out)$')
+      if (match2 !== null){
+        alert("Invalid File Name: " + fileName);
         return {}
       }
 

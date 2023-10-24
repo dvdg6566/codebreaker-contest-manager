@@ -49,7 +49,7 @@ def createRole(problemName):
 			MaxSessionDuration = 3600
 		)
 
-		sleep(10)
+		sleep(5)
 
 		arn = resp['Role']['Arn']
 
