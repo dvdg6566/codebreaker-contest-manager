@@ -21,7 +21,6 @@ def createRole(problemName):
 			'Resource': [f'arn:aws:s3:::{judgeName}-testdata/{problemName}/*'] 
 	   }] 
 	}
-	print(policyDocument)
 
 	assumeRolePolicyDocument = {
 		"Version": "2012-10-17",
@@ -30,10 +29,9 @@ def createRole(problemName):
 				"Effect": "Allow",
 				"Principal": {
 					"AWS": [
-						f"arn:aws:iam::{accountId}:role/ec2main",
-						f"arn:aws:iam::{accountId}:user/orange",
-						f"arn:aws:iam::{accountId}:root"
-					] # Allow 
+						f"arn:aws:iam::{accountId}:role/{judgeName}-ec2main",
+						f"arn:aws:iam::{accountId}:user/orange"
+					] # Allow EC2 main for EC2, and orange for local testing
 				},
 				"Action": "sts:AssumeRole",
 				"Condition": {}

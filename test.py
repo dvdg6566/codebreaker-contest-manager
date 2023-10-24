@@ -21,10 +21,15 @@ import awstools
 
 #print(a,b,c)
 
-# p = awstools.cognito.createUser('test23', 'member')['password']
-# print(awstools.cognito.authenticate('test23', p))
-# print(p)
+p = awstools.cognito.createUser('test23', 'member')['password']
+print(awstools.cognito.authenticate('test23', p))
+print(p)
 
 # print(awstools.contests.getAllContestTimes())
 
-print(awstools.cognito.resetPassword('0rang3'))
+# p = awstools.cognito.resetPassword('0rang3')['password']
+# print(p)
+# print(awstools.cognito.authenticate('0rang3', p))
+# print(awstools.cognito.resetPassword('0rang3'))
+
+# print(p)
