@@ -17,10 +17,11 @@ def createRole(problemName):
 		'Statement': [{ 
 			'Sid': 'AllowAllS3ActionsInUserFolder', 
 			'Effect': 'Allow', 
-			'Action': ['s3:*'], 
+			'Action': ['s3:PutObject'], 
 			'Resource': [f'arn:aws:s3:::{judgeName}-testdata/{problemName}/*'] 
 	   }] 
 	}
+	print(policyDocument)
 
 	assumeRolePolicyDocument = {
 		"Version": "2012-10-17",
@@ -57,6 +58,8 @@ def createRole(problemName):
 			PolicyName='S3AccessPolicy',
 			PolicyDocument=json.dumps(policyDocument)
 		)
+
+		sleep(5)
 
 		return arn
 

@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_cors import CORS
 
 import os
 
@@ -11,6 +12,7 @@ from admin import adminview, editproblemlistview, editusersview, editproblemview
 import awstools
 
 app = Flask(__name__)
+CORS(app)
 
 FLASK_SECRET_KEY = os.environ.get('FLASK_SECRET_KEY')
 API_GATEWAY_LINK = os.environ.get('API_GATEWAY_LINK')
