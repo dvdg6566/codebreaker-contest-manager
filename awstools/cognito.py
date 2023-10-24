@@ -13,7 +13,15 @@ client = boto3.client('cognito-idp')
 def generateSecurePassword():
 	# Generates secure password to set when creating member accounts
 	alphabet = string.ascii_letters + string.digits + string.punctuation
-	password = ''.join(secrets.choice(alphabet) for i in range(8))  # for a 20-character password
+	
+	# Remove inverted commas 
+	alphabet = alphabet.replace('\'', '')
+	alphabet = alphabet.replace('\"', '')
+	
+	alphanum = string.ascii_letters + string.digits
+
+	# First and last character of password should not have punctuation (QoL improvement)
+	password = secrets.choice(alphanum) + ''.join(secrets.choice(alphabet) for i in range(6)) + secrets.choice(alphanum)
 	return password
 
 def authenticate(username, password):
@@ -66,4 +74,4 @@ def resetPassword (username):
 	    Permanent=True
 	)
 
-	return {'stauts': 200, 'password': password}
+	return {'status': 200, 'password': password}

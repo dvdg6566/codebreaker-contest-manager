@@ -26,10 +26,16 @@ app.add_url_rule('/submission/<subId>', view_func = submissionview.submission, m
 # app.add_url_rule('/contest/<contestId>/scoreboard', view_func = scoreboardview.scoreboard)
 app.add_url_rule('/submissions',view_func = submissionlistview.submissionlist, methods=['GET', 'POST'])
 app.add_url_rule('/profile/<username>', view_func = profileview.profile)
+
+# ADMIN RELATED ROUTES
+
 app.add_url_rule('/admin',view_func=adminview.admin)
 app.add_url_rule('/admin/editproblems',view_func=editproblemlistview.editproblemlist, methods = ['GET', 'POST'])
+
 app.add_url_rule('/admin/editusers',view_func=editusersview.editusers)
 app.add_url_rule('/admin/editusertable',view_func=editusersview.editUserTable, methods = ['POST'])
+app.add_url_rule('/admin/resetpasswords',view_func=editusersview.resetPassword, methods = ['POST'])
+
 app.add_url_rule('/credits',view_func=credits.credits)
 app.add_url_rule('/admin/editproblem/<problemName>', view_func = editproblemview.editproblem, methods = ['GET', 'POST'])
 app.add_url_rule('/admin/uploadtestdata/<problemName>', view_func = uploadtestdataview.uploadtestdata, methods = ['GET'])

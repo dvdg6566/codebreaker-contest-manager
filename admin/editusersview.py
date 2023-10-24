@@ -1,8 +1,43 @@
 from flask import Flask, render_template, request, url_for, redirect, flash, session, get_flashed_messages, make_response, send_file
+from flask import Response
 
+import io
+import csv
 import json
 import awstools
 from datetime import datetime
+
+# data = [
+#     {'Name': 'John', 'Age': 30},
+#     {'Name': 'Alice', 'Age': 25},
+#     {'Name': 'Bob', 'Age': 35},
+# ]
+
+def resetPassword():
+    print("Hi")
+    userInfo = awstools.users.getCurrentUserInfo()
+
+    if userInfo == None or userInfo['role'] != 'admin':
+        return {'status':300,'error':'Access to resource denied'}
+
+    resetUsers = json.loads(request.form.get('usernames'))
+
+    usernames = [i['username'] for i in awstools.users.getAllUsernames()]
+    for user in resetUsers:
+        if user not in usernames: return {'status':300, 'error': 'Invalid username!'}
+
+    # data = 'Name,Age\nJohn,30\nAlice,Bob\n'
+    data = 'Username,Password\n'
+
+    for user in resetUsers:
+        resp = awstools.cognito.resetPassword(username = user)
+        if resp['status'] != 200:
+            return {'status':300, 'error': 'An AWS Cognito erro has occured!'}
+        password = resp['password']
+        data += f'{user},{password}\n'
+
+    return {'status': 200, 'data': data}
+
 
 def editUserTable():
     userInfo = awstools.users.getCurrentUserInfo()

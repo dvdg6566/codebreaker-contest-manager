@@ -74,7 +74,7 @@ if __name__ == '__main__':
 		createLambda()
 
 '''
-	{
+{
 	"submissionId": 27,
 	"grader": false, 
 	"problemType": "Batch",

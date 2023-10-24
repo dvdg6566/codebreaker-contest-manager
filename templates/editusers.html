@@ -18,6 +18,7 @@
 				</div>
 				<br>
 				<input class="btn btn-secondary" id="submitbutton" name="submit" type="submit" value="Add Users to Contest" onclick="addUsers()">
+				<input class="btn btn-secondary" id="submitbutton" name="submit" type="submit" value="Reset Passwords" onclick="resetPasswords()">
 			</div>
 		</div>
 	</div>
@@ -31,7 +32,6 @@
 				<th scope="col">Full Name</th>
 				<th scope="col">Role</th>
 				<th scope="col">Contest</th>
-				<th scope="col">Group</th>
 				<th scope="col">Actions</th>
 			</tr>
 			</thead>
@@ -45,7 +45,6 @@
 				<td>{{user.fullname}}</td>
 				<td> {{user.role}} </td>
 				<td>{{user.contest}}</td>
-				<td> {{user.group}} </td>
 				<td>
 					<button class="edit-btn">Edit</button>
 					<button class="save-btn">Save</button>
@@ -89,37 +88,78 @@
 	</script>
 	<!-- Adds users to contest when button is clicked -->
 	<script>
-		var contestIds = {{contestIds|tojson}}
-		addUsers = () => {
-			let usernames = [] // users to add into contest
-			let contestId = $('#contest_id').val()
+	var contestIds = {{contestIds|tojson}}
+	addUsers = () => {
+		let usernames = [] // users to add into contest
+		let contestId = $('#contest_id').val()
 
-			if (!contestIds.includes(contestId)){
-				alert('Invalid Contest Id!')
-				return
-			}
-
-			let tableRows = $('#myTable > tbody > tr')
-			tableRows.each((i) => {
-				let row = tableRows[i];
-				let checked = row.children[0].children[0].checked
-				let username = row.children[1].children[0].text
-				if (checked){usernames.push(username)}
-			})
-			params = {
-				'operation': 'ADD_USERS_TO_CONTEST',
-				'usernames': JSON.stringify(usernames),
-				'contestId': contestId
-			}
-			$.post('/admin/editusertable',params).done((response) => {
-				if (response.status !== 200){
-					alert(response.error);
-					location.reload();
-				}else{
-					alert('Success!');
-					location.reload();
-				}
-			})
+		if (!contestIds.includes(contestId)){
+			alert('Invalid Contest Id!')
+			return
 		}
+
+		let tableRows = $('#myTable > tbody > tr')
+		tableRows.each((i) => {
+			let row = tableRows[i];
+			let checked = row.children[0].children[0].checked
+			let username = row.children[1].children[0].text
+			if (checked){usernames.push(username);}
+		})
+		params = {
+			'operation': 'ADD_USERS_TO_CONTEST',
+			'usernames': JSON.stringify(usernames),
+			'contestId': contestId
+		}
+		$.post('/admin/editusertable',params).done((response) => {
+			if (response.status !== 200){
+				alert(response.error);
+				location.reload();
+			}else{
+				alert('Success!');
+				location.reload();
+			}
+		})
+	}
+	</script>
+	<!-- Resets password of selected users -->
+	<script>
+	resetPasswords = () => {
+		let usernames = [] // users to reset password
+
+		let tableRows = $('#myTable > tbody > tr')
+		tableRows.each((i) => {
+			let row = tableRows[i];
+			let checked = row.children[0].children[0].checked
+			let username = row.children[1].children[0].text
+			if (checked){usernames.push(username);}
+		})
+
+		params = {
+			'usernames': JSON.stringify(usernames)
+		}
+
+		console.log(params);
+
+		$.post('/admin/resetpasswords',params,(response) => {
+			if (response.status !== 200){
+				alert(response.error);
+				location.reload();
+			}else{
+				let blob = new Blob([response.data], {type:'text/csv'});
+
+				// Creates a blob containing CSV file, then creates phantom element with source as blob URL and triggers a click
+				let blobURL = window.URL.createObjectURL(blob);
+				let a = document.createElement('a');
+				a.href=blobURL;
+				a.download='credentials.csv';
+				a.style.display = 'none';
+				document.body.appendChild(a);
+				a.click();
+
+				// Cleanup: Remove blob URL
+				window.URL.revokeObjectURL(blobURL);
+			}
+		});
+	}
 	</script>
 {% endblock %}
