@@ -44,14 +44,15 @@ def authenticate(username, password):
 		else:
 			return {'status':400}
 
-def createUser (username, role):
+def createUser (username, role, password=''):
 	response = client.admin_create_user(
 		UserPoolId = userPoolId,
 		Username = username
 	)
-	# Set password to fixed thing
-	# Randomly generate password and return value
-	password = generateSecurePassword()
+
+	# Set randomly generated password unless overwritten by default admin
+	if password == '':
+		password = generateSecurePassword()
 
 	response = client.admin_set_user_password(
 	    UserPoolId=userPoolId,
@@ -64,8 +65,9 @@ def createUser (username, role):
 
 	return {'status': 200, 'password': password}
 
-def resetPassword (username):
-	password = generateSecurePassword()
+def resetPassword (username, password=''):
+	if password == '':
+		password = generateSecurePassword()
 
 	response = client.admin_set_user_password(
 	    UserPoolId=userPoolId,
