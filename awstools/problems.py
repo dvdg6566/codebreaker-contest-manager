@@ -53,11 +53,12 @@ def updateProblemInfo(problemName, info):
 def validateProblem(problemName):
     lambda_input = {'problemName':problemName}
     res = lambda_client.invoke(FunctionName = PROBLEM_VALIDATION_LAMBDA_NAME, InvocationType='RequestResponse', Payload = json.dumps(lambda_input))
-    return res
+    output = json.loads(res['Payload'].read().decode("utf-8"))
+    return output
 
-def createProblemWithId(problem_id):
+def createProblemWithId(problemName):
     info = {}
-    info['title'] = problem_id
+    info['title'] = problemName
     info['problem_type'] = 'Batch'
     info['timeLimit'] = 1
     info['memoryLimit'] = 1024
@@ -67,12 +68,12 @@ def createProblemWithId(problem_id):
     info['testcaseCount'] = 0
     info['subDelay'] = 60
     info['subLimit'] = 50
-    updateProblemInfo(problem_id, info)
+    updateProblemInfo(problemName, info)
     subtasks = {}
     subtasks['subtaskScores'] = [100]
     subtasks['subtaskDependency'] = ['1']
-    updateSubtaskInfo(problem_id, subtasks)
-    validateProblem(problem_id)
+    updateSubtaskInfo(problemName, subtasks)
+    validateProblem(problemName)
 
 def updateCommunicationFileNames(problemName, info):
     problems_table.update_item(
