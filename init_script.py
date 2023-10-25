@@ -70,15 +70,37 @@ def createPing():
 		bucket = f'{judgeName}-statements',
 		s3path = 'ping.pdf'
 	)
+
 	uploadFile(
-		
+		localPath = f'{filedir}/attachments.zip',
+		bucket = f'{judgeName}-attachments',
+		s3path = 'ping.zip'
 	)
-	
-	# uploadFolder(
-	# 	localPath = f'{filedir}/testdata',
-	# 	bucket = f'{judgeName}-testdata',
-	# 	s3path = 'ping'
-	# )
+
+	uploadFile(
+		localPath = f'{filedir}/checker.cpp',
+		bucket = f'{judgeName}-checkers',
+		s3path = 'source/ping.cpp'
+	)
+
+	uploadFile(
+		localPath = f'{filedir}/grader.cpp',
+		bucket = f'{judgeName}-graders',
+		s3path = 'ping/grader.cpp'
+	)
+
+	uploadFile(
+		localPath = f'{filedir}/ping.h',
+		bucket = f'{judgeName}-graders',
+		s3path = 'ping/ping.h'
+	)
+
+	print("Compiling Checker")
+	res = awstools.problems.compileChecker(
+		problemName = 'ping'
+	)
+
+	print(res)
 
 	problemInfo = awstools.problems.getProblemInfo(problemName = 'ping')
 	
@@ -109,3 +131,4 @@ if __name__ == '__main__':
 	# createAddition()
 	createPing()
 	# createPrisoners()
+	pass

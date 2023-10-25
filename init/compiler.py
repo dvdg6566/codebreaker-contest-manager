@@ -35,7 +35,7 @@ def initBuild():
 def waitForCompletion(buildId):
 	status = 'IN_PROGRESS'
 	while status == 'IN_PROGRESS':
-		sleep(20)
+		sleep(10)
 
 		response = codeBuildClient.batch_get_builds(ids=[buildId])
 		status = response['builds'][0]['buildStatus']
