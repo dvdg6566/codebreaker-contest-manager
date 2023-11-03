@@ -3,14 +3,8 @@ from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 import awstools
 
-# awstools.users.setContest(['sgzoo', 'sgzoo2'], 'firstcontest')
 
-# print(awstools.cognito.generateSecurePassword())
-# awstools.cognito.createUser('0rang3', 'admin', email='czhdaniel@gmail.com')
-# resp = awstools.cognito.createUser('test3', 'member')
-# pw = resp['password']
-# pw = "3'K*V..Z"
-# print(resp)
+print(awstools.sts.createRole(problemName = 'ping'))
 
 # print(awstools.cognito.authenticate('test3', pw))
 
@@ -27,8 +21,8 @@ import awstools
 
 # print(awstools.contests.getAllContestTimes())
 
-p = awstools.cognito.resetPassword('0rang3')['password']
-print(p)
+# p = awstools.cognito.resetPassword('0rang3')['password']
+# print(p)
 # print(awstools.cognito.authenticate('0rang3', p))
 # print(awstools.cognito.resetPassword('0rang3'))
 

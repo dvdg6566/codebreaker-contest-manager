@@ -40,6 +40,7 @@ def createRole(problemName):
 	}
 
 	try:
+		# Create role with trust relationship for EC2 to use
 		resp = iam_client.create_role(
 			RoleName = roleName,
 			AssumeRolePolicyDocument = json.dumps(assumeRolePolicyDocument),
@@ -51,17 +52,24 @@ def createRole(problemName):
 
 		arn = resp['Role']['Arn']
 
+		# IAM policy limits permissions to PutObject access to specific folder of testdata bucket
 		iam_client.put_role_policy(
 			RoleName=roleName,
 			PolicyName='S3AccessPolicy',
 			PolicyDocument=json.dumps(policyDocument)
 		)
 
-		sleep(5)
+		# Permissions boundary limited to S3 with managed policy
+		iam_client.put_role_permissions_boundary(
+			RoleName=roleName,
+			PermissionsBoundary="arn:aws:iam::aws:policy/AmazonS3FullAccess"
+		)
 
+		sleep(5)
 		return arn
 
 	except ClientError as e:
+
 		if e.response['Error']['Code'] == 'EntityAlreadyExists':
 			resp = iam_client.get_role(RoleName=roleName)
 			arn = resp['Role']['Arn']
@@ -82,4 +90,3 @@ def getTokens(problemName):
 		'secretAccessKey': secretAccessKey,
 		'sessionToken': sessionToken
 	}
-

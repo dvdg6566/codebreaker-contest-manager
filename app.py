@@ -45,7 +45,7 @@ app.add_url_rule('/admin/editcontests',view_func=editcontestlistview.editcontest
 app.add_url_rule('/admin/editcontesttimes', view_func=editcontestlistview.editcontesttimes, methods=['POST'])
 app.add_url_rule('/admin/editcontest/<contestId>', view_func = editcontestview.editcontest, methods = ['GET', 'POST'])
 app.add_url_rule('/admin/editcontestproblems',view_func=editcontestview.editcontestproblems, methods = ['POST'])
-app.add_url_rule('/announcements', view_func=announcementsvie~/Desktop/codebreaker/test-ref/referencew.announcements, methods=['GET','POST'])
+app.add_url_rule('/announcements', view_func=announcementsview.announcements, methods=['GET','POST'])
 app.add_url_rule('/clarifications', view_func=clarificationsview.clarifications, methods=['GET','POST'])
 app.add_url_rule('/login', view_func=loginview.login, methods = ['GET', 'POST'])
 app.add_url_rule('/logout', view_func=loginview.logout, methods = ['GET'])
