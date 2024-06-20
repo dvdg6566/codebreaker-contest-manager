@@ -23,7 +23,7 @@ Codebreaker runs on Amazon Web Services’ **Serverless Architecture** for compi
 
 To support problems with hundreds of testcases, we use Express Step Functions to orchestrate our Lambda workflow. This supports the **concurrent invocations** of hundreds of independent Lambda graders that will grade each of the testcases. This allows for extremely quick grading times for an optimal user interface. As per latest benchmark, the problem `housevisit` with 562 testcases is graded in about 11-12 seconds.
 
-Codebreaker contest is built on CI/CD tools and Infrastructure As Code (IaaC). This allows for **automated deployment** of the entire ecosystem -- Databases, Storage, Compute and Grading instances -- all from the click of (a few) buttons. The entire architecture will be **completely within your own AWS account**, giving users complete ownership of the technical stack. This facilitates better security and permission allocation of testdata and problems, as well as simplified billing.
+Codebreaker Contest is built on CI/CD tools and Infrastructure As Code (IaaC). This allows for **automated deployment** of the entire ecosystem -- Databases, Storage, Compute and Grading instances -- all from the click of (a few) buttons. The entire architecture will be **completely within your own AWS account**, giving users complete ownership of the technical stack. This facilitates better security and permission allocation of testdata and problems, as well as simplified billing.
 
 ## Architecture
 
