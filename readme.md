@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Codebreaker is the national online judge of Singapore. It is home to 1,400 problems and over 3,000 users, and has performed **national team selection** for the International Olympiad of Informatics teams in Singapore and Indonesia.
+Codebreaker is the official platform for Singapore Informatics Olympiad training and contests. It is home to 1,600 problems and over 4,000 users, and has performed **national team selection** for the International Olympiad of Informatics teams in Singapore and Indonesia.
 
 The primary motivation for Singapore’s migration to Codebreaker is **lowering operating costs**. Despite having run for over 4 years and having graded hundreds of thousands of submissions, the total operational cost of Codebreaker is under $2000.
 
