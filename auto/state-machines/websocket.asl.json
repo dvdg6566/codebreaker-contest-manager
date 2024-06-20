@@ -1,0 +1,37 @@
+{
+	"Comment": "Codebreaker websocket to notify front-end. Front-end packages connectionIds into groups of 100, and then step function will invoke lambda functions for each group to run concurrently.",
+	"StartAt": "Iterate",
+	"States":{
+		"Iterate": {
+			"Type": "Map",
+			"Iterator": {
+				"StartAt": "WebSocketInvoke",
+				"States": {
+					"WebSocketInvoke": {
+						"Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+              "Payload.$": "$",
+              "FunctionName": "${WebSocketInvokeFunctionArn}"
+            },
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "Lambda.ServiceException",
+                  "Lambda.AWSLambdaException",
+                  "Lambda.SdkClientException"
+                ],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 6,
+                "BackoffRate": 2
+              }
+            ],
+            "End": true
+					}
+				}
+			},
+			"MaxConcurrency": 1000,
+			"End": true
+		}
+	}
+}

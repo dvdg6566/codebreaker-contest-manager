@@ -15,7 +15,7 @@ def createRole(problemName):
 	policyDocument = {
 		'Version':'2012-10-17', 
 		'Statement': [{ 
-			'Sid': 'AllowS3PutInTestcaseFolder', 
+			'Sid': 'AllowS3PutItemInTestcaseFolder', 
 			'Effect': 'Allow', 
 			'Action': ['s3:PutObject'], 
 			'Resource': [f'arn:aws:s3:::{judgeName}-testdata/{problemName}/*'] 

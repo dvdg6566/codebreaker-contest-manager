@@ -1,0 +1,176 @@
+{
+  "Comment": "Codebreaker grading system",
+  "StartAt": "Parallel",
+  "States": {
+    "Parallel": {
+      "Type": "Parallel",
+      "Next": "Compile Success",
+      "Branches": [
+        {
+          "StartAt": "Initialise Submission",
+          "States": {
+            "Initialise Submission": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "OutputPath": "$.Payload",
+              "Parameters": {
+                "Payload.$": "$",
+                "FunctionName": "${ProblemInitFunctionArn}"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 6,
+                  "BackoffRate": 2
+                }
+              ],
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Compile Submission",
+          "States": {
+            "Compile Submission": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "OutputPath": "$.Payload",
+              "Parameters": {
+                "Payload":{
+                  "submissionId.$": "$.submissionId",
+                  "grader.$": "$.grader",
+                  "problemType.$": "$.problemType",
+                  "language.$": "$.language",
+                  "problemName.$": "$.problemName",
+                  "username.$": "$.username",
+                  "submissionTime.$": "$.submissionTime",
+                  "eventType": "SUBMISSION"
+                },
+                "FunctionName": "arn:aws:lambda:ap-southeast-1:354145626860:function:${JudgeName}-compiler"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 6,
+                  "BackoffRate": 2
+                }
+              ],
+              "End": true
+            }
+          }
+        }
+      ]
+    },
+    "Compile Success": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$[1].status",
+          "NumericEquals": 422,
+          "Next": "Update CE Score"
+        }
+      ],
+      "Default": "Iterate Testcases"
+    },
+    "Iterate Testcases": {
+      "Type": "Map",
+      "ResultPath": null,
+      "Iterator": {
+        "StartAt": "Testcase Grader",
+        "States": {
+          "Testcase Grader": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+              "Payload.$": "$",
+              "FunctionName": "${TestcaseGraderWrapperFunctionArn}"
+            },
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "Lambda.ServiceException",
+                  "Lambda.AWSLambdaException",
+                  "Lambda.SdkClientException"
+                ],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 6,
+                "BackoffRate": 2
+              }
+            ],
+            "End": true
+          }
+        }
+      },
+      "MaxConcurrency": 1000,
+      "ItemsPath": "$[0].payloads",
+      "Next": "Update Score"
+    },
+    "Update CE Score": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$",
+      "Parameters": {
+        "FunctionName": "${ProblemScorerFunctionArn}",
+        "Payload": {
+          "problemName.$": "$[0].payloads[0].problemName",
+          "username.$": "$[0].username",
+          "submissionId.$": "$[0].payloads[0].submissionId",
+          "compileError": true,
+          "compileErrorMessage.$": "$[1].error"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "End": true
+    },
+    "Update Score": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$",
+      "Parameters": {
+        "FunctionName": "${ProblemScorerFunctionArn}",
+        "Payload": {
+          "problemName.$": "$[0].payloads[0].problemName",
+          "username.$": "$[0].username",
+          "submissionId.$": "$[0].payloads[0].submissionId",
+          "compileError": false,
+          "compileErrorMessage": ""
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "End": true
+    }
+  }
+}
