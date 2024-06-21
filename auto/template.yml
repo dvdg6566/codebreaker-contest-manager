@@ -1,0 +1,726 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  JudgeName:
+    Description: "Insert name of Codebreaker Clone"
+    Type: "String"
+    Default: "codebreakercontest"
+  # TODO: Add Timezone and initialisation email
+
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 1600
+    Environment:
+      Variables:
+        judgeName: !Ref JudgeName
+        AWS_ACCOUNT_ID: !Ref AWS::AccountId
+    Handler: lambda_function.lambda_handler
+    Runtime: python3.9
+
+Resources:
+  ProblemValidationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Lambda function to check that all problem files are present
+      FunctionName: 
+        Fn::Sub: ${JudgeName}-problem-validation
+      CodeUri: lambda-functions/problem-validation
+      Policies: 
+        - AmazonDynamoDBFullAccess
+        - AmazonS3ReadOnlyAccess
+  RegradeProblemFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Lambda function to trigger a regarde of all submissions to a problem
+      FunctionName:
+        Fn::Sub: ${JudgeName}-regrade-problem
+      Timeout: 900 # Extra time to iterate through all submissions
+      CodeUri: lambda-functions/regrade-problem
+      Policies:
+        - AmazonDynamoDBFullAccess
+        - AWSStepFunctionsFullAccess
+  WebSocketInvokeFunction:
+    DependsOn: WebSocket
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Lambda function to trigger API Gateway websockets for pings duirng announcements and clarifications
+      FunctionName:
+        Fn::Sub: ${JudgeName}-websocket-invoke
+      CodeUri: lambda-functions/websocket-invoke
+      Policies:
+        - AmazonAPIGatewayInvokeFullAccess
+      Environment:
+        Variables:
+          WebSocketURI:
+            Fn::Sub: https://${WebSocket}.execute-api.${AWS::Region}.amazonaws.com/production
+  WebSocketConnectionsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Lambda function for subscription to API Gateway websocket
+      FunctionName:
+        Fn::Sub: ${JudgeName}-websocket-connections
+      CodeUri: lambda-functions/websocket-connections
+      Policies:
+        - AmazonDynamoDBFullAccess
+  GraderProblemInitFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Lambda function to create dynamoDB entry when initialising submission
+      FunctionName:
+        Fn::Sub: ${JudgeName}-grader-problem-init
+      CodeUri: lambda-functions/grader-problem-init
+      Policies:
+        - AmazonDynamoDBFullAccess      
+  GraderProblemScorerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Lambda function to aggregate testcase verdicts and score submission
+      FunctionName:
+        Fn::Sub: ${JudgeName}-grader-problem-scorer
+      CodeUri: lambda-functions/grader-problem-scorer
+      Policies:
+        - AmazonDynamoDBFullAccess
+  TestcaseGraderWrapperFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Lambda function that handles dynamoDB updates of score. Acts as wrapper to segregate permissions. 
+      MemorySize: 128 # Wrapper function allocated minimal memory to minimise costs
+      FunctionName:
+        Fn::Sub: ${JudgeName}-testcase-grader-wrapper
+      CodeUri: lambda-functions/testcase-grader-wrapper
+      Policies:
+        - AmazonDynamoDBFullAccess
+        - AWSLambdaRole
+  PsUtilLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: 
+        Fn::Sub: ${JudgeName}-psutil
+      Description: Lambda layer for testcase grading for PSutil library
+      ContentUri: lambda-functions/psutil
+      CompatibleRuntimes:
+        - python3.9
+      CompatibleArchitectures:
+        - x86_64
+  TestcaseGraderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Lambda function that executes testcase with no/low permissions
+      MemorySize: 2560 # Extra memory above 2048
+      FunctionName:
+        Fn::Sub: ${JudgeName}-testcase-grader
+      CodeUri: lambda-functions/testcase-grader
+      Policies:
+        - AmazonS3ReadOnlyAccess
+      Layers:
+        - !Ref PsUtilLayer
+  CompilerECRRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: 
+        Fn::Sub: ${JudgeName}-compiler-repository
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties: 
+      RoleName:
+        Fn::Sub: ${JudgeName}-codebuild
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
+        - arn:aws:iam::aws:policy/CloudWatchFullAccess
+  CodeBuildProject: 
+    Type: 'AWS::CodeBuild::Project'
+    Properties:
+      Description: CodeBuild Project to build compiler docker image
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Name: 
+        Fn::Sub:
+          ${JudgeName}-codebuildproject
+      Artifacts: 
+        Type: no_artifacts
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: 'aws/codebuild/standard:6.0'
+        PrivilegedMode: true
+        EnvironmentVariables:
+          - Name: AWS_DEFAULT_REGION
+            Value: !Ref AWS::Region
+          - Name: AWS_ACCOUNT_ID
+            Value: !Ref AWS::AccountId
+          - Name: IMAGE_REPO_NAME
+            Value: 
+              Fn::Sub: ${JudgeName}-compiler-repository
+      Source:
+        Type: GITHUB
+        Location: 'https://github.com/singaporezoo/codebreaker-compiler'
+        BuildSpec: buildspec.yml
+  CompilerFunctionIAMRole: # Declare role here, actual function only declared by bootstrap script as cloudformation cannot handle Lambda from ECR declared within same template
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName:
+        Fn::Sub: ${JudgeName}-compiler-role
+      AssumeRolePolicyDocument: # Specifies that role is for EC2 instances only
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AmazonDynamoDBReadOnlyAccess
+  GradingStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name:
+        Fn::Sub:
+          ${JudgeName}-grading
+      DefinitionUri: state-machines/grading.asl.json
+      DefinitionSubstitutions:
+        ProblemInitFunctionArn: !GetAtt GraderProblemInitFunction.Arn
+        TestcaseGraderWrapperFunctionArn: !GetAtt TestcaseGraderWrapperFunction.Arn
+        ProblemScorerFunctionArn: !GetAtt GraderProblemScorerFunction.Arn
+        JudgeName: !Ref JudgeName
+      Type: STANDARD
+      Policies:
+        - AWSLambdaRole
+  WebSocketStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: 
+        Fn::Sub:
+          ${JudgeName}-websocket
+      DefinitionUri: state-machines/websocket.asl.json
+      DefinitionSubstitutions:
+        WebSocketInvokeFunctionArn: !GetAtt WebSocketInvokeFunction.Arn
+      Type: EXPRESS
+      Policies:
+        - AWSLambdaRole
+  AttachmentsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Fn::Sub: ${JudgeName}-attachments
+      AccessControl: Private
+  TestdataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: 
+        Fn::Sub: ${JudgeName}-testdata
+      AccessControl: Private
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - '*'
+            AllowedMethods:
+              - POST
+              - PUT
+            AllowedOrigins: 
+              - '*'
+            ExposedHeaders:
+              - ETag
+  SubmissionsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: 
+        Fn::Sub: ${JudgeName}-submissions
+      AccessControl: Private
+      LifecycleConfiguration:
+        Rules:
+          - Id: clear-old-compiled
+            Prefix: compiled/
+            Status: Enabled
+            ExpirationInDays: 1
+  StatementsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Fn::Sub: ${JudgeName}-statements
+      AccessControl: Private
+  GradersBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: 
+        Fn::Sub: ${JudgeName}-graders
+      AccessControl: Private
+  CheckersBucket: 
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: 
+        Fn::Sub: ${JudgeName}-checkers
+      AccessControl: Private
+  AnnouncementsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: ${JudgeName}-announcements
+      AttributeDefinitions:
+        - AttributeName: announcementId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: announcementId
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+  ClarificationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: ${JudgeName}-clarifications
+      AttributeDefinitions:
+        - AttributeName: askedBy
+          AttributeType: S
+        - AttributeName: clarificationTime
+          AttributeType: S
+      KeySchema:
+        - AttributeName: askedBy
+          KeyType: HASH
+        - AttributeName: clarificationTime
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+  ContestsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: ${JudgeName}-contests
+      AttributeDefinitions:
+        - AttributeName: contestId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: contestId
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+  GlobalCountersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: ${JudgeName}-global-counters
+      AttributeDefinitions:
+        - AttributeName: counterId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: counterId
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+  ProblemsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: ${JudgeName}-problems
+      AttributeDefinitions:
+        - AttributeName: problemName
+          AttributeType: S
+      KeySchema:
+        - AttributeName: problemName
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+  SubmissionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: ${JudgeName}-submissions
+      AttributeDefinitions:
+        - AttributeName: subId
+          AttributeType: N
+        - AttributeName: problemName
+          AttributeType: S
+        - AttributeName: username
+          AttributeType: S
+      KeySchema:
+        - AttributeName: subId
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      GlobalSecondaryIndexes:
+        - IndexName: problemIndex
+          KeySchema:
+            - AttributeName: problemName
+              KeyType: HASH
+            - AttributeName: subId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: INCLUDE
+            NonKeyAttributes:
+              - submissionTime
+              - maxTime
+              - maxMemory
+              - username
+              - totalScore
+              - language
+              - compileErrorMessage
+        - IndexName: usernameIndex
+          KeySchema: 
+            - AttributeName: username
+              KeyType: HASH
+            - AttributeName: subId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: INCLUDE
+            NonKeyAttributes: 
+              - submissionTime
+              - maxTime
+              - maxMemory
+              - problemName              
+              - totalScore
+              - language
+              - compileErrorMessage
+              - score
+              - subtaskScores
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: ${JudgeName}-users
+      AttributeDefinitions:
+        - AttributeName: username
+          AttributeType: S
+        - AttributeName: contestId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: username
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      GlobalSecondaryIndexes:
+        - IndexName: contestIndex # To allow querying which users are registered in contest
+          KeySchema:
+            - AttributeName: contestId
+              KeyType: HASH
+            - AttributeName: username
+              KeyType: RANGE
+          Projection:
+            ProjectionType: KEYS_ONLY
+  WebSocketTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: ${JudgeName}-websocket
+      AttributeDefinitions:
+        - AttributeName: connectionId
+          AttributeType: S
+        - AttributeName: accountRole
+          AttributeType: S
+        - AttributeName: username
+          AttributeType: S
+      KeySchema:
+        - AttributeName: connectionId
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      GlobalSecondaryIndexes:
+        - IndexName: accountRoleUsernameIndex
+          KeySchema:
+            - AttributeName: accountRole
+              KeyType: HASH
+            - AttributeName: username
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: expiryTime
+        Enabled: True
+  WebSocket:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name:
+        Fn::Sub: ${JudgeName}-websocket
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: "$request.body.action"
+  WebSocketConnectLambdaPermission: 
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocket
+      - WebSocketConnectionsFunction
+    Properties:
+      FunctionName: !GetAtt WebSocketConnectionsFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocket}/*/$connect
+  WebSocketDisconnectLambdaPermission: 
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocket
+      - WebSocketConnectionsFunction
+    Properties:
+      FunctionName: !GetAtt WebSocketConnectionsFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocket}/*/$disconnect
+  WebSocketMessageLambdaPermission: 
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocket
+      - WebSocketConnectionsFunction
+    Properties:
+      FunctionName: !GetAtt WebSocketConnectionsFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocket}/*/message
+  WebSocketDefaultLambdaPermission: 
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocket
+      - WebSocketConnectionsFunction
+    Properties:
+      FunctionName: !GetAtt WebSocketConnectionsFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocket}/*/$default
+  ConnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocket
+      RouteKey: $connect
+      RouteResponseSelectionExpression: '$default'
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      OperationName: ConnectRoute
+      Target: !Join
+        - '/'
+        - - 'integrations'
+          - !Ref WebSocketIntegration
+  DisconnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocket
+      RouteKey: $disconnect
+      RouteResponseSelectionExpression: '$default'
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      OperationName: ConnectRoute
+      Target: !Join
+        - '/'
+        - - 'integrations'
+          - !Ref WebSocketIntegration
+  MessageRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocket
+      RouteKey: message
+      RouteResponseSelectionExpression: '$default'
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      OperationName: ConnectRoute
+      Target: !Join
+        - '/'
+        - - 'integrations'
+          - !Ref WebSocketIntegration
+  DefaultRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocket
+      RouteKey: $default
+      RouteResponseSelectionExpression: '$default'
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      OperationName: ConnectRoute
+      Target: !Join
+        - '/'
+        - - 'integrations'
+          - !Ref WebSocketIntegration
+  WebSocketIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocket
+      Description: Connect Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri: 
+        Fn::Sub:
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebSocketConnectionsFunction.Arn}/invocations
+  WebSocketDeployment:
+    Type: AWS::ApiGatewayV2::Deployment
+    DependsOn:
+    - ConnectRoute
+    - MessageRoute
+    - DisconnectRoute
+    - DefaultRoute
+    Properties:
+      ApiId: !Ref WebSocket
+  WebSocketStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      StageName: production
+      Description: Production stage
+      DeploymentId: !Ref WebSocketDeployment
+      ApiId: !Ref WebSocket
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties: 
+      UserPoolName:
+        Fn::Sub:
+          ${JudgeName}-users
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    DependsOn: UserPool
+    Properties:
+      ClientName:
+        Fn::Sub:
+          ${JudgeName}-userclient
+      UserPoolId: !Ref UserPool
+      ExplicitAuthFlows: # Grants permission for server to perform authentication against cognito
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_PASSWORD_AUTH
+  WebServerIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName:
+        Fn::Sub: ${JudgeName}-ec2main
+      AssumeRolePolicyDocument: # Specifies that role is for EC2 instances only
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/IAMFullAccess # For creating IAM roles for each problem
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess 
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AWSLambda_FullAccess
+        - arn:aws:iam::aws:policy/AWSStepFunctionsFullAccess # For grading of problems
+        - arn:aws:iam::aws:policy/AmazonCognitoPowerUser # For user management
+  WebServerIamProfile:
+    Type: AWS::IAM::InstanceProfile
+    DependsOn: WebServerIamRole
+    Properties:
+      InstanceProfileName: 
+        Fn::Sub: ${JudgeName}-ec2profile
+      Roles:
+        - Ref: WebServerIamRole
+  WebServerSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupName: 
+        Fn::Sub:
+          ${JudgeName}-ec2SG 
+      GroupDescription: Allows SSH and HTTP
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          FromPort: 22
+          IpProtocol: 'tcp'
+          ToPort: 22
+        - CidrIp: 0.0.0.0/0
+          FromPort: 80
+          IpProtocol: 'tcp'
+          ToPort: 80
+        - CidrIp: 0.0.0.0/0
+          FromPort: 8000
+          IpProtocol: 'tcp'
+          ToPort: 8000
+  WebServer:
+    Type: AWS::EC2::Instance
+    DependsOn: 
+      - WebServerIamProfile
+      - GlobalCountersTable
+    # Depends on global counters because the bootstrap script initialises global counter values
+    # TODO: Add dependncy on cognito and users table, then create initial admin user from bootstrap
+    Properties:
+      InstanceType: t2.nano
+      ImageId: ami-0b7e55206a0a22afc # Ubuntu 22.04 x64
+      IamInstanceProfile: 
+        Ref: WebServerIamProfile
+      Tags: 
+        - Key: Name
+          Value: 
+            Fn::Sub: ${JudgeName}-webserver
+      SecurityGroupIds:
+        - !Ref WebServerSecurityGroup
+      UserData:
+        Fn::Base64: 
+          !Sub |
+            #!/bin/bash
+            apt update
+            apt install python3-pip -y
+            apt install python3-venv -y
+            apt install awscli -y
+            apt install nginx -y
+            apt install unzip -y
+            
+            cd /home/ubuntu
+            git clone https://github.com/dvdg6566/codebreaker-contest-manager
+            cd codebreaker-contest-manager
+
+            python3 -m venv virtualenv
+            source virtualenv/bin/activate
+            pip3 install -r requirements.txt
+
+            mkdir config
+            mkdir /home/ubuntu/.aws/
+
+            {
+              echo '[default]'
+              echo 'region = ${AWS::Region}'
+              echo 'output = json'
+            } >> config/awsconfig
+            cp config/awsconfig /home/ubuntu/.aws/config
+
+            touch .env
+            {
+              echo 'JUDGE_NAME = ${JudgeName}'
+              echo 'AWS_ACCOUNT_ID = ${AWS::AccountId}'
+              echo 'AWS_REGION = ${AWS::Region}'
+              echo ''
+              echo 'TIMEZONE_OFFSET = 8'
+              echo 'COGNITO_CLIENT_ID = ${UserPoolClient}'
+              echo 'COGNITO_USER_POOL_ID = ${UserPool}'
+              echo 'API_GATEWAY_LINK = wss://${WebSocket}.execute-api.ap-southeast-1.amazonaws.com/production'
+              echo 'FLASK_SECRET_KEY = sometemporaryplaceholder'
+            } >> .env
+
+            mkdir /home/ubuntu/codebreaker-contest-manager/static/cppreference
+            cd /home/ubuntu/codebreaker-contest-manager/static/cppreference
+            wget https://upload.cppreference.com/mwiki/images/b/b2/html_book_20190607.zip -O cppreference.zip
+            unzip cppreference.zip
+            rm cppreference.zip
+
+            cp init/systemd /etc/systemd/system/codebreaker.service
+            cp init/nginx /etc/nginx/sites-available/default
+
+            systemctl start codebreaker
+            systemctl enable codebreaker
+            systemctl start nginx
+            systemctl restart nginx
+            systemctl enable nginx
+  WebServerEIP:
+    Type: AWS::EC2::EIP
+    DependsOn: WebServer
+    Properties:
+      InstanceId: !Ref WebServer
+Outputs: 
+  GatewayEndpoint: 
+    Value: 
+      Fn::Sub: https://${WebSocket}.execute-api.${AWS::Region}.amazonaws.com/production
+  ECRURI:
+    Value:
+      Fn::Join:
+        - ':'
+        - - !GetAtt CompilerECRRepository.RepositoryUri
+          - 'latest'
+  WebServerIP:
+    Description: Main web server IP address
+    Value: !Ref WebServerEIP
+  CognitoUserPoolId:
+    Value: !Ref UserPool
+  CognitoClientId:
+    Value: !Ref UserPoolClient
