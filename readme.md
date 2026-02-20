@@ -12,7 +12,7 @@ Codebreaker Contest System is a fork of the Codebreaker architecture that serves
 
 As of time of writing (Feb 2026), here are the statistics for [Codebreaker](https://codebreaker.xyz) (main site).
 
-- Codebreaker receives an average number of page requests of about 400,000 to 500,000 (Excluding AI). 
+- Codebreaker receives an average of 400,000 to 500,000 monthly page requests (Excluding AI crawlers). 
 - Codebreaker has graded a total of 800,000 submissions.
 - Codebreaker has 8,000+ registerd users, coming from a 100+ different countries
 - Codebreaker has a total of 2,000+ different problems, coming from a mixture of public sources and the Singapore training system.
