@@ -2,12 +2,10 @@ version = 0.1
 [default]
 [default.deploy]
 [default.deploy.parameters]
-stack_name = "codebreakercontest"
-s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-s1r1qu4ekhbd"
-s3_prefix = "codebreakercontest"
+stack_name = "codebreakercontest01"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-kydcdcfv2zes"
+s3_prefix = "codebreakercontest01"
 region = "ap-southeast-1"
-confirm_changeset = true
 capabilities = "CAPABILITY_NAMED_IAM"
-parameter_overrides = "JudgeName=\"codebreakercontest\""
+parameter_overrides = "JudgeName=\"codebreakercontest01\""
 image_repositories = []
-resolve_s3 = true

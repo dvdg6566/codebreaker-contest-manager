@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: S3 storage buckets for Codebreaker
+
+Parameters:
+  JudgeName:
+    Type: String
+
+Resources:
+  AttachmentsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${JudgeName}-attachments
+      AccessControl: Private
+
+  TestdataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${JudgeName}-testdata
+      AccessControl: Private
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - '*'
+            AllowedMethods:
+              - POST
+              - PUT
+            AllowedOrigins:
+              - '*'
+            ExposedHeaders:
+              - ETag
+
+  SubmissionsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${JudgeName}-submissions
+      AccessControl: Private
+      LifecycleConfiguration:
+        Rules:
+          - Id: clear-old-compiled
+            Prefix: compiled/
+            Status: Enabled
+            ExpirationInDays: 1
+
+  StatementsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${JudgeName}-statements
+      AccessControl: Private
+
+  GradersBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${JudgeName}-graders
+      AccessControl: Private
+
+  CheckersBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${JudgeName}-checkers
+      AccessControl: Private
+
+Outputs:
+  TestdataBucketArn:
+    Value: !GetAtt TestdataBucket.Arn

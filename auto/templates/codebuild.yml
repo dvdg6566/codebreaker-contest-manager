@@ -1,0 +1,84 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ECR repository and CodeBuild project for compiler Lambda
+
+Parameters:
+  JudgeName:
+    Type: String
+
+Resources:
+  CompilerECRRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub ${JudgeName}-compiler-repository
+
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${JudgeName}-codebuild
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
+        - arn:aws:iam::aws:policy/CloudWatchFullAccess
+
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Description: CodeBuild Project to build compiler docker image
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Name: !Sub ${JudgeName}-codebuildproject
+      Artifacts:
+        Type: no_artifacts
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: 'aws/codebuild/standard:6.0'
+        PrivilegedMode: true
+        EnvironmentVariables:
+          - Name: AWS_DEFAULT_REGION
+            Value: !Ref AWS::Region
+          - Name: AWS_ACCOUNT_ID
+            Value: !Ref AWS::AccountId
+          - Name: IMAGE_REPO_NAME
+            Value: !Sub ${JudgeName}-compiler-repository
+      Source:
+        Type: GITHUB
+        Location: 'https://github.com/singaporezoo/codebreaker-compiler'
+        BuildSpec: buildspec.yml
+
+  CompilerFunctionIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${JudgeName}-compiler-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AmazonDynamoDBReadOnlyAccess
+
+Outputs:
+  ECRRepositoryUri:
+    Value: !GetAtt CompilerECRRepository.RepositoryUri
+  ECRURI:
+    Value: !Join
+      - ':'
+      - - !GetAtt CompilerECRRepository.RepositoryUri
+        - 'latest'
+  CompilerRoleArn:
+    Value: !GetAtt CompilerFunctionIAMRole.Arn
+  CodeBuildProjectName:
+    Value: !Ref CodeBuildProject

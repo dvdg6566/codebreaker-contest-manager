@@ -1,0 +1,143 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: WebSocket API Gateway for Codebreaker real-time updates
+
+Parameters:
+  JudgeName:
+    Type: String
+  WebSocketConnectionsFunctionArn:
+    Type: String
+
+Resources:
+  WebSocketInvokeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Lambda function to trigger API Gateway websockets for pings during announcements and clarifications
+      FunctionName: !Sub ${JudgeName}-websocket-invoke
+      CodeUri: ../lambda-functions/websocket-invoke
+      Timeout: 60
+      MemorySize: 1600
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.9
+      Environment:
+        Variables:
+          judgeName: !Ref JudgeName
+          AWS_ACCOUNT_ID: !Ref AWS::AccountId
+          WebSocketURI: !Sub https://${WebSocket}.execute-api.${AWS::Region}.amazonaws.com/production
+      Policies:
+        - AmazonAPIGatewayInvokeFullAccess
+
+  WebSocket:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub ${JudgeName}-websocket
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: '$request.body.action'
+
+  WebSocketConnectLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref WebSocketConnectionsFunctionArn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocket}/*/$connect
+
+  WebSocketDisconnectLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref WebSocketConnectionsFunctionArn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocket}/*/$disconnect
+
+  WebSocketMessageLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref WebSocketConnectionsFunctionArn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocket}/*/message
+
+  WebSocketDefaultLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref WebSocketConnectionsFunctionArn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocket}/*/$default
+
+  WebSocketIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocket
+      Description: Connect Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebSocketConnectionsFunctionArn}/invocations
+
+  ConnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocket
+      RouteKey: $connect
+      RouteResponseSelectionExpression: '$default'
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      OperationName: ConnectRoute
+      Target: !Sub integrations/${WebSocketIntegration}
+
+  DisconnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocket
+      RouteKey: $disconnect
+      RouteResponseSelectionExpression: '$default'
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      OperationName: DisconnectRoute
+      Target: !Sub integrations/${WebSocketIntegration}
+
+  MessageRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocket
+      RouteKey: message
+      RouteResponseSelectionExpression: '$default'
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      OperationName: MessageRoute
+      Target: !Sub integrations/${WebSocketIntegration}
+
+  DefaultRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocket
+      RouteKey: $default
+      RouteResponseSelectionExpression: '$default'
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      OperationName: DefaultRoute
+      Target: !Sub integrations/${WebSocketIntegration}
+
+  WebSocketDeployment:
+    Type: AWS::ApiGatewayV2::Deployment
+    DependsOn:
+      - ConnectRoute
+      - MessageRoute
+      - DisconnectRoute
+      - DefaultRoute
+    Properties:
+      ApiId: !Ref WebSocket
+
+  WebSocketStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      StageName: production
+      Description: Production stage
+      DeploymentId: !Ref WebSocketDeployment
+      ApiId: !Ref WebSocket
+
+Outputs:
+  WebSocketInvokeFunctionArn:
+    Value: !GetAtt WebSocketInvokeFunction.Arn
+  GatewayEndpoint:
+    Value: !Sub https://${WebSocket}.execute-api.${AWS::Region}.amazonaws.com/production

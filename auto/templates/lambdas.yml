@@ -1,0 +1,144 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Lambda functions for Codebreaker
+
+Parameters:
+  JudgeName:
+    Type: String
+  TestdataBucketArn:
+    Type: String
+
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 1600
+    Environment:
+      Variables:
+        judgeName: !Ref JudgeName
+        AWS_ACCOUNT_ID: !Ref AWS::AccountId
+    Handler: lambda_function.lambda_handler
+    Runtime: python3.9
+
+Resources:
+  ProblemValidationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Lambda function to check that all problem files are present
+      FunctionName: !Sub ${JudgeName}-problem-validation
+      CodeUri: ../lambda-functions/problem-validation
+      Policies:
+        - AmazonDynamoDBFullAccess
+        - AmazonS3ReadOnlyAccess
+
+  RegradeProblemFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Lambda function to trigger a regrade of all submissions to a problem
+      FunctionName: !Sub ${JudgeName}-regrade-problem
+      Timeout: 900
+      CodeUri: ../lambda-functions/regrade-problem
+      Policies:
+        - AmazonDynamoDBFullAccess
+        - AWSStepFunctionsFullAccess
+
+  WebSocketConnectionsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Lambda function for subscription to API Gateway websocket
+      FunctionName: !Sub ${JudgeName}-websocket-connections
+      CodeUri: ../lambda-functions/websocket-connections
+      Policies:
+        - AmazonDynamoDBFullAccess
+
+  GraderProblemInitFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Lambda function to create dynamoDB entry when initialising submission
+      FunctionName: !Sub ${JudgeName}-grader-problem-init
+      CodeUri: ../lambda-functions/grader-problem-init
+      Policies:
+        - AmazonDynamoDBFullAccess
+
+  GraderProblemScorerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Lambda function to aggregate testcase verdicts and score submission
+      FunctionName: !Sub ${JudgeName}-grader-problem-scorer
+      CodeUri: ../lambda-functions/grader-problem-scorer
+      Policies:
+        - AmazonDynamoDBFullAccess
+
+  TestcaseGraderWrapperFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Lambda function that handles dynamoDB updates of score. Acts as wrapper to segregate permissions.
+      MemorySize: 128
+      FunctionName: !Sub ${JudgeName}-testcase-grader-wrapper
+      CodeUri: ../lambda-functions/testcase-grader-wrapper
+      Policies:
+        - AmazonDynamoDBFullAccess
+        - AWSLambdaRole
+
+  PsUtilLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Sub ${JudgeName}-psutil
+      Description: Lambda layer for testcase grading for PSutil library
+      ContentUri: ../lambda-functions/psutil
+      CompatibleRuntimes:
+        - python3.9
+      CompatibleArchitectures:
+        - x86_64
+
+  TestcaseGraderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Lambda function that executes testcase with no/low permissions
+      MemorySize: 2560
+      FunctionName: !Sub ${JudgeName}-testcase-grader
+      CodeUri: ../lambda-functions/testcase-grader
+      Policies:
+        - AmazonS3ReadOnlyAccess
+      Layers:
+        - !Ref PsUtilLayer
+
+  TestdataUploadRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${JudgeName}-testdata-upload-role
+      Description: Role for admin testdata uploads with session-scoped permissions
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS:
+                - !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+            Action: 'sts:AssumeRole'
+            Condition: {}
+      Policies:
+        - PolicyName: TestdataS3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: AllowPutObjectToTestdataBucket
+                Effect: Allow
+                Action:
+                  - 's3:PutObject'
+                Resource:
+                  - !Sub '${TestdataBucketArn}/*'
+      PermissionsBoundary: 'arn:aws:iam::aws:policy/AmazonS3FullAccess'
+
+Outputs:
+  WebSocketConnectionsFunctionArn:
+    Value: !GetAtt WebSocketConnectionsFunction.Arn
+  GraderProblemInitFunctionArn:
+    Value: !GetAtt GraderProblemInitFunction.Arn
+  GraderProblemScorerFunctionArn:
+    Value: !GetAtt GraderProblemScorerFunction.Arn
+  TestcaseGraderWrapperFunctionArn:
+    Value: !GetAtt TestcaseGraderWrapperFunction.Arn
+  TestdataUploadRoleArn:
+    Description: ARN of the testdata upload role for STS AssumeRole
+    Value: !GetAtt TestdataUploadRole.Arn
