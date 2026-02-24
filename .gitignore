@@ -7,4 +7,4 @@ main/__pycache__/
 admin/__pycache__/
 virtualenv
 .env
-auto/.aws_sam/
+auto/.aws-sam/
