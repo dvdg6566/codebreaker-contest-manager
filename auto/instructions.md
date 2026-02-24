@@ -58,8 +58,15 @@ sam build --template template.yml
 ### Option 1: Interactive Deployment (Development)
 
 ```bash
-sam deploy --guided --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND
+sam build && sam deploy --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND
 ```
+
+**Required capabilities:**
+
+| Capability | Permission |
+|------------|------------|
+| `CAPABILITY_NAMED_IAM` | The templates create IAM roles with custom names (e.g., `${JudgeName}-codebuild`, `${JudgeName}-compiler-role`). CloudFormation requires explicit acknowledgment to create named IAM resources. |
+| `CAPABILITY_AUTO_EXPAND` | Nested templates (`lambdas.yml`, `websocket.yml`, `step-functions.yml`) use the SAM transform (`AWS::Serverless-2016-10-31`), which is a CloudFormation macro. This capability allows CloudFormation to expand these macros in nested stacks. |
 
 This will prompt for:
 - Stack name
@@ -203,6 +210,8 @@ cat response.json
 sam build && sam deploy
 ```
 
+CloudFormation will only update resources that changed, so if only one nested template was modified, only that nested stack will be updated.
+
 For one-click deployment updates:
 ```bash
 sam package \
@@ -213,5 +222,35 @@ sam package \
 
 aws s3 cp packaged.yml s3://codebreaker-templates-<your-unique-suffix>/packaged.yml
 ```
+
+### Deploying Individual Nested Stacks
+
+You can deploy a nested template as a standalone stack for testing or isolated updates:
+
+```bash
+# Deploy only the CodeBuild stack
+sam deploy \
+  --template-file templates/codebuild.yml \
+  --stack-name <JudgeName>-codebuild-standalone \
+  --parameter-overrides JudgeName=<JudgeName> \
+  --capabilities CAPABILITY_NAMED_IAM \
+  --region ap-southeast-1
+
+# Deploy only the Storage stack
+sam deploy \
+  --template-file templates/storage.yml \
+  --stack-name <JudgeName>-storage-standalone \
+  --parameter-overrides JudgeName=<JudgeName> \
+  --region ap-southeast-1
+
+# Deploy only the Database stack
+sam deploy \
+  --template-file templates/database.yml \
+  --stack-name <JudgeName>-database-standalone \
+  --parameter-overrides JudgeName=<JudgeName> \
+  --region ap-southeast-1
+```
+
+**Note:** Standalone deployments create separate resources. For production, always deploy through the main `template.yml` to maintain proper resource references.
 
 ---

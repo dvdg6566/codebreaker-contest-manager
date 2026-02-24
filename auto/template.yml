@@ -40,8 +40,6 @@ Resources:
       TemplateURL: templates/codebuild.yml
       Parameters:
         JudgeName: !Ref JudgeName
-      Capabilities:
-        - CAPABILITY_NAMED_IAM
 
   # Lambda Stack - All Lambda Functions
   LambdasStack:
@@ -53,9 +51,6 @@ Resources:
       Parameters:
         JudgeName: !Ref JudgeName
         TestdataBucketArn: !GetAtt StorageStack.Outputs.TestdataBucketArn
-      Capabilities:
-        - CAPABILITY_NAMED_IAM
-        - CAPABILITY_AUTO_EXPAND
 
   # WebSocket Stack - API Gateway WebSocket
   WebSocketStack:
@@ -67,8 +62,6 @@ Resources:
       Parameters:
         JudgeName: !Ref JudgeName
         WebSocketConnectionsFunctionArn: !GetAtt LambdasStack.Outputs.WebSocketConnectionsFunctionArn
-      Capabilities:
-        - CAPABILITY_AUTO_EXPAND
 
   # Step Functions Stack - State Machines
   StepFunctionsStack:
@@ -84,8 +77,6 @@ Resources:
         TestcaseGraderWrapperFunctionArn: !GetAtt LambdasStack.Outputs.TestcaseGraderWrapperFunctionArn
         GraderProblemScorerFunctionArn: !GetAtt LambdasStack.Outputs.GraderProblemScorerFunctionArn
         WebSocketInvokeFunctionArn: !GetAtt WebSocketStack.Outputs.WebSocketInvokeFunctionArn
-      Capabilities:
-        - CAPABILITY_AUTO_EXPAND
 
 Outputs:
   GatewayEndpoint:

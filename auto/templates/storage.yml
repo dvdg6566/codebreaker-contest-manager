@@ -10,13 +10,11 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub ${JudgeName}-attachments
-      AccessControl: Private
 
   TestdataBucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub ${JudgeName}-testdata
-      AccessControl: Private
       CorsConfiguration:
         CorsRules:
           - AllowedHeaders:
@@ -33,7 +31,6 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub ${JudgeName}-submissions
-      AccessControl: Private
       LifecycleConfiguration:
         Rules:
           - Id: clear-old-compiled
@@ -45,19 +42,16 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub ${JudgeName}-statements
-      AccessControl: Private
 
   GradersBucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub ${JudgeName}-graders
-      AccessControl: Private
 
   CheckersBucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub ${JudgeName}-checkers
-      AccessControl: Private
 
 Outputs:
   TestdataBucketArn:

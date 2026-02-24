@@ -1,0 +1,134 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Codebreaker Contest Manager - Main Stack
+Parameters:
+  JudgeName:
+    Description: Insert name of Codebreaker Clone
+    Type: String
+    Default: codebreakercontest
+Resources:
+  StorageStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: StorageStack/template.yaml
+      Parameters:
+        JudgeName:
+          Ref: JudgeName
+    Metadata:
+      SamResourceId: StorageStack
+  DatabaseStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: DatabaseStack/template.yaml
+      Parameters:
+        JudgeName:
+          Ref: JudgeName
+    Metadata:
+      SamResourceId: DatabaseStack
+  CognitoStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: CognitoStack/template.yaml
+      Parameters:
+        JudgeName:
+          Ref: JudgeName
+    Metadata:
+      SamResourceId: CognitoStack
+  CodeBuildStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: CodeBuildStack/template.yaml
+      Parameters:
+        JudgeName:
+          Ref: JudgeName
+    Metadata:
+      SamResourceId: CodeBuildStack
+  LambdasStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+    - StorageStack
+    Properties:
+      TemplateURL: LambdasStack/template.yaml
+      Parameters:
+        JudgeName:
+          Ref: JudgeName
+        TestdataBucketArn:
+          Fn::GetAtt:
+          - StorageStack
+          - Outputs.TestdataBucketArn
+    Metadata:
+      SamResourceId: LambdasStack
+  WebSocketStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+    - LambdasStack
+    Properties:
+      TemplateURL: WebSocketStack/template.yaml
+      Parameters:
+        JudgeName:
+          Ref: JudgeName
+        WebSocketConnectionsFunctionArn:
+          Fn::GetAtt:
+          - LambdasStack
+          - Outputs.WebSocketConnectionsFunctionArn
+    Metadata:
+      SamResourceId: WebSocketStack
+  StepFunctionsStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+    - LambdasStack
+    - WebSocketStack
+    Properties:
+      TemplateURL: StepFunctionsStack/template.yaml
+      Parameters:
+        JudgeName:
+          Ref: JudgeName
+        GraderProblemInitFunctionArn:
+          Fn::GetAtt:
+          - LambdasStack
+          - Outputs.GraderProblemInitFunctionArn
+        TestcaseGraderWrapperFunctionArn:
+          Fn::GetAtt:
+          - LambdasStack
+          - Outputs.TestcaseGraderWrapperFunctionArn
+        GraderProblemScorerFunctionArn:
+          Fn::GetAtt:
+          - LambdasStack
+          - Outputs.GraderProblemScorerFunctionArn
+        WebSocketInvokeFunctionArn:
+          Fn::GetAtt:
+          - WebSocketStack
+          - Outputs.WebSocketInvokeFunctionArn
+    Metadata:
+      SamResourceId: StepFunctionsStack
+Outputs:
+  GatewayEndpoint:
+    Description: WebSocket API Gateway endpoint
+    Value:
+      Fn::GetAtt:
+      - WebSocketStack
+      - Outputs.GatewayEndpoint
+  ECRURI:
+    Description: ECR URI for compiler image
+    Value:
+      Fn::GetAtt:
+      - CodeBuildStack
+      - Outputs.ECRURI
+  CognitoUserPoolId:
+    Description: Cognito User Pool ID
+    Value:
+      Fn::GetAtt:
+      - CognitoStack
+      - Outputs.UserPoolId
+  CognitoClientId:
+    Description: Cognito User Pool Client ID
+    Value:
+      Fn::GetAtt:
+      - CognitoStack
+      - Outputs.UserPoolClientId
+  TestdataUploadRoleArn:
+    Description: ARN of the testdata upload role for STS AssumeRole
+    Value:
+      Fn::GetAtt:
+      - LambdasStack
+      - Outputs.TestdataUploadRoleArn
