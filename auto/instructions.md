@@ -16,14 +16,112 @@ auto/
 │   ├── storage.yml           # S3 buckets
 │   ├── database.yml          # DynamoDB tables
 │   ├── cognito.yml           # User authentication
-│   ├── codebuild.yml         # ECR + CodeBuild for compiler
+│   ├── codebuild.yml         # ECR + CodeBuild + Compiler Lambda (auto-deployed)
 │   ├── lambdas.yml           # Lambda functions
 │   ├── websocket.yml         # WebSocket API Gateway
 │   └── step-functions.yml    # State machines
 ├── lambda-functions/         # Lambda source code
+│   └── codebuild-trigger/    # Custom Resource for compiler deployment
 ├── state-machines/           # Step Function definitions
 └── samconfig.toml            # SAM deployment configuration
 ```
+
+---
+
+## Architecture: Compiler Lambda Auto-Deployment
+
+The compiler Lambda (which compiles user code submissions) requires a Docker image with gcc/g++ installed. This image is built via CodeBuild and stored in ECR. The deployment is fully automated using a CloudFormation Custom Resource.
+
+### Why Custom Resource?
+
+- **Problem**: Lambda requires the Docker image to exist in ECR before the function can be created
+- **Problem**: CloudFormation can't natively trigger CodeBuild and wait for completion
+- **Solution**: A Custom Resource Lambda that orchestrates the build process
+
+### Deployment Flow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ PHASE 1: Create Base Resources                                   │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  CompilerECRRepository     CodeBuildRole     CompilerFunctionRole│
+│  (empty ECR repo)          (for CodeBuild)   (for Lambda)        │
+│         │                        │                               │
+│         └────────────┬───────────┘                               │
+│                      ▼                                           │
+│              CodeBuildProject                                    │
+│              (pulls from GitHub: codebreaker-compiler)           │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ PHASE 2: Create Trigger Lambda                                   │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  CodeBuildTriggerFunction                                        │
+│  - Can start CodeBuild builds                                    │
+│  - Can poll for build status                                     │
+│  - Can create/update/delete Lambda functions                     │
+│  - Sends responses back to CloudFormation                        │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ PHASE 3: Custom Resource Execution (~5-10 minutes)               │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  CodeBuildTrigger (Custom::CodeBuildTrigger)                     │
+│                                                                  │
+│  CloudFormation invokes the trigger Lambda with parameters:      │
+│  - ProjectName: <judge>-codebuildproject                         │
+│  - JudgeName: <judge>                                            │
+│  - ImageUri: <account>.dkr.ecr.<region>.amazonaws.com/...:latest │
+│  - CompilerRoleArn: arn:aws:iam::...:role/...-compiler-role      │
+│                                                                  │
+│  The Lambda then:                                                │
+│  1. Calls codebuild.start_build()                                │
+│  2. Polls every 10s until build succeeds/fails                   │
+│  3. Calls lambda.create_function() with the ECR image            │
+│  4. Returns SUCCESS/FAILED to CloudFormation                     │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ PHASE 4: Complete                                                │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Outputs available:                                              │
+│  - ECRURI: The ECR image URI                                     │
+│  - CompilerFunctionArn: The created Lambda ARN                   │
+│  - CodeBuildProjectName: For manual rebuilds if needed           │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Custom Resource Lifecycle
+
+| Event | Action |
+|-------|--------|
+| **Create** | Trigger CodeBuild → Wait → Create Compiler Lambda |
+| **Update** | Trigger CodeBuild → Wait → Update Compiler Lambda code |
+| **Delete** | Delete the Compiler Lambda function |
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `templates/codebuild.yml` | Defines ECR, CodeBuild project, IAM roles, trigger Lambda, and Custom Resource |
+| `lambda-functions/codebuild-trigger/lambda_function.py` | Custom Resource handler that orchestrates the build |
+
+### Troubleshooting
+
+**Build takes too long**: CodeBuild typically takes 5-10 minutes. The Custom Resource has a 15-minute timeout.
+
+**Build fails**: Check CodeBuild logs in CloudWatch at `/aws/codebuild/<judge>-codebuildproject`
 
 ---
 
@@ -165,19 +263,17 @@ https://console.aws.amazon.com/cloudformation/home#/stacks/quickcreate?templateU
 
 ## Post-Deployment Steps
 
-### 1. Build Compiler Image (Manual - until Custom Resource is implemented)
+### 1. Compiler Lambda (Automatic)
 
-After the stack is deployed, run the compiler initialization script:
+The compiler Lambda is now deployed automatically via a CloudFormation Custom Resource:
 
-```bash
-cd ../init
-python compiler.py
-```
+1. **CodeBuild triggers automatically** when the stack is created
+2. **Docker image is built** and pushed to ECR (~5-10 minutes)
+3. **Compiler Lambda is created** from the ECR image
 
-This:
-- Triggers the CodeBuild project
-- Waits for the Docker image to be built
-- Creates the compiler Lambda function from the ECR image
+You can monitor progress in the CloudFormation console - the `CodeBuildTrigger` resource will show `CREATE_IN_PROGRESS` while building.
+
+**Note:** Initial deployment takes ~10-15 minutes due to CodeBuild. Subsequent updates that don't modify the compiler will be faster.
 
 ### 2. Verify Deployment
 

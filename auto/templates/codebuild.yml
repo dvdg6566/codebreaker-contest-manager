@@ -1,5 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: ECR repository and CodeBuild project for compiler Lambda
+Transform: AWS::Serverless-2016-10-31
+Description: ECR repository, CodeBuild project, and automated compiler Lambda deployment
 
 Parameters:
   JudgeName:
@@ -69,16 +70,69 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonS3FullAccess
         - arn:aws:iam::aws:policy/AmazonDynamoDBReadOnlyAccess
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  # Lambda function that triggers CodeBuild and creates the Compiler Lambda
+  CodeBuildTriggerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${JudgeName}-codebuild-trigger
+      Description: Custom Resource handler that triggers CodeBuild and creates Compiler Lambda
+      CodeUri: ../lambda-functions/codebuild-trigger
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.9
+      Timeout: 900
+      MemorySize: 256
+      Environment:
+        Variables:
+          judgeName: !Ref JudgeName
+          AWS_ACCOUNT_ID: !Ref AWS::AccountId
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - codebuild:StartBuild
+                - codebuild:BatchGetBuilds
+              Resource: !GetAtt CodeBuildProject.Arn
+            - Effect: Allow
+              Action:
+                - lambda:CreateFunction
+                - lambda:UpdateFunctionCode
+                - lambda:DeleteFunction
+                - lambda:GetFunction
+              Resource: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${JudgeName}-compiler
+            - Effect: Allow
+              Action:
+                - iam:PassRole
+              Resource: !GetAtt CompilerFunctionIAMRole.Arn
+            - Effect: Allow
+              Action:
+                - sts:GetCallerIdentity
+              Resource: '*'
+
+  # Custom Resource that triggers the build on stack create/update
+  CodeBuildTrigger:
+    Type: Custom::CodeBuildTrigger
+    DependsOn:
+      - CodeBuildProject
+      - CompilerECRRepository
+      - CompilerFunctionIAMRole
+    Properties:
+      ServiceToken: !GetAtt CodeBuildTriggerFunction.Arn
+      ProjectName: !Ref CodeBuildProject
+      JudgeName: !Ref JudgeName
+      ImageUri: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${JudgeName}-compiler-repository:latest
+      CompilerRoleArn: !GetAtt CompilerFunctionIAMRole.Arn
 
 Outputs:
   ECRRepositoryUri:
     Value: !GetAtt CompilerECRRepository.RepositoryUri
   ECRURI:
-    Value: !Join
-      - ':'
-      - - !GetAtt CompilerECRRepository.RepositoryUri
-        - 'latest'
+    Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${JudgeName}-compiler-repository:latest
   CompilerRoleArn:
     Value: !GetAtt CompilerFunctionIAMRole.Arn
   CodeBuildProjectName:
     Value: !Ref CodeBuildProject
+  CompilerFunctionArn:
+    Value: !GetAtt CodeBuildTrigger.CompilerFunctionArn
