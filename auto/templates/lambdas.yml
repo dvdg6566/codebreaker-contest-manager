@@ -17,7 +17,7 @@ Globals:
         judgeName: !Ref JudgeName
         AWS_ACCOUNT_ID: !Ref AWS::AccountId
     Handler: lambda_function.lambda_handler
-    Runtime: python3.9
+    Runtime: python3.14
 
 Resources:
   ProblemValidationFunction:
@@ -86,7 +86,7 @@ Resources:
       Description: Lambda layer for testcase grading for PSutil library
       ContentUri: ../lambda-functions/psutil
       CompatibleRuntimes:
-        - python3.9
+        - python3.14
       CompatibleArchitectures:
         - x86_64
 

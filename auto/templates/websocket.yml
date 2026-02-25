@@ -18,7 +18,7 @@ Resources:
       Timeout: 60
       MemorySize: 1600
       Handler: lambda_function.lambda_handler
-      Runtime: python3.9
+      Runtime: python3.14
       Environment:
         Variables:
           judgeName: !Ref JudgeName
