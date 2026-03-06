@@ -52,7 +52,7 @@ Resources:
       Source:
         Type: GITHUB
         Location: 'https://github.com/singaporezoo/codebreaker-contest-manager'
-        BuildSpec: auto/codebreaker-compiler/buildspec.yml
+        BuildSpec: auto/compiler/buildspec.yml
 
   CompilerFunctionIAMRole:
     Type: AWS::IAM::Role

@@ -1,0 +1,55 @@
+Batch, CE:
+{
+	"submissionId": 23843,
+	"grader": false, 
+	"problemType": "Batch",
+	"language": "cpp",
+	"problemName": "firefighting",
+	"regradeall": false,
+	"regrade":false,
+	"stitch": false,
+	"username": "reporter",
+	"submissionTime": "2020-12-23 21:12:51"
+}
+
+Batch, AC:
+{
+	"submissionId": 197642,
+	"grader": false, 
+	"problemType": "Batch",
+	"language": "cpp",
+	"problemName": "reading",
+	"regradeall": false,
+	"regrade":false,
+	"stitch": false,
+	"username": "0rang3",
+	"submissionTime": "2022-12-21 00:36:20"
+}
+
+Interactive, AC:
+{
+	"submissionId": 198921,
+	"grader": true, 
+	"problemType": "Interactive",
+	"language": "cpp",
+	"problemName": "minimum",
+	"regradeall": false,
+	"regrade":false,
+	"stitch": false,
+	"username": "0rang3",
+	"submissionTime": "2022-12-21 16:56:24"
+}
+
+Communication, PS:
+{
+	"submissionId": 240864,
+	"grader": false, 
+	"problemType": "Batch",
+	"language": "cpp",
+	"problemName": "consistency",
+	"regradeall": false,
+	"regrade":false,
+	"stitch": false,
+	"username": "0rang3",
+	"submissionTime": "2023-02-22 21:35:07"
+}
