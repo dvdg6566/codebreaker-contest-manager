@@ -51,7 +51,7 @@ Resources:
             Value: !Sub ${JudgeName}-compiler-repository
       Source:
         Type: GITHUB
-        Location: 'https://github.com/singaporezoo/codebreaker-contest-manager'
+        Location: 'https://github.com/dvdg6566/codebreaker-contest-manager'
         BuildSpec: auto/compiler/buildspec.yml
 
   CompilerFunctionIAMRole:
