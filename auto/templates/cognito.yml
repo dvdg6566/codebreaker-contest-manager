@@ -23,6 +23,18 @@ Resources:
         - ALLOW_REFRESH_TOKEN_AUTH
         - ALLOW_USER_PASSWORD_AUTH
 
+  AdminGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: admin
+      UserPoolId: !Ref UserPool
+
+  ContestantGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: contestant
+      UserPoolId: !Ref UserPool
+
 Outputs:
   UserPoolId:
     Value: !Ref UserPool
