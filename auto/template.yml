@@ -33,14 +33,13 @@ Resources:
       Parameters:
         JudgeName: !Ref JudgeName
 
-  # CodeBuild Stack - TEMPORARILY DISABLED (waiting for CodeBuild quota increase)
-  # Uncomment when quota is approved:
-  # CodeBuildStack:
-  #   Type: AWS::CloudFormation::Stack
-  #   Properties:
-  #     TemplateURL: templates/codebuild.yml
-  #     Parameters:
-  #       JudgeName: !Ref JudgeName
+  # CodeBuild Stack: Lambda compiler backed by Docker container
+  CodeBuildStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: templates/codebuild.yml
+      Parameters:
+        JudgeName: !Ref JudgeName
 
   # Lambda Stack - All Lambda Functions
   LambdasStack:
@@ -83,10 +82,9 @@ Outputs:
   GatewayEndpoint:
     Description: WebSocket API Gateway endpoint
     Value: !GetAtt WebSocketStack.Outputs.GatewayEndpoint
-  # ECRURI - TEMPORARILY DISABLED
-  # ECRURI:
-  #   Description: ECR URI for compiler image
-  #   Value: !GetAtt CodeBuildStack.Outputs.ECRURI
+  ECRURI:
+    Description: ECR URI for compiler image
+    Value: !GetAtt CodeBuildStack.Outputs.ECRURI
   CognitoUserPoolId:
     Description: Cognito User Pool ID
     Value: !GetAtt CognitoStack.Outputs.UserPoolId
@@ -96,7 +94,6 @@ Outputs:
   TestdataUploadRoleArn:
     Description: ARN of the testdata upload role for STS AssumeRole
     Value: !GetAtt LambdasStack.Outputs.TestdataUploadRoleArn
-  # CompilerFunctionArn - TEMPORARILY DISABLED
-  # CompilerFunctionArn:
-  #   Description: ARN of the Compiler Lambda function
-  #   Value: !GetAtt CodeBuildStack.Outputs.CompilerFunctionArn
+  CompilerFunctionArn:
+    Description: ARN of the Compiler Lambda function
+    Value: !GetAtt CodeBuildStack.Outputs.CompilerFunctionArn
