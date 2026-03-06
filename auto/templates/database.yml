@@ -120,6 +120,9 @@ Resources:
               - compileErrorMessage
               - score
               - subtaskScores
+              - gradingCompleteTime
+              - verdicts
+              - status
 
   UsersTable:
     Type: AWS::DynamoDB::Table
