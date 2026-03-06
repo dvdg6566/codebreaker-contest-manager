@@ -8,3 +8,4 @@ admin/__pycache__/
 virtualenv
 .env
 auto/.aws-sam/
+.claude/

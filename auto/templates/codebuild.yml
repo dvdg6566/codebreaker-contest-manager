@@ -51,8 +51,8 @@ Resources:
             Value: !Sub ${JudgeName}-compiler-repository
       Source:
         Type: GITHUB
-        Location: 'https://github.com/singaporezoo/codebreaker-compiler'
-        BuildSpec: buildspec.yml
+        Location: 'https://github.com/singaporezoo/codebreaker-contest-manager'
+        BuildSpec: auto/codebreaker-compiler/buildspec.yml
 
   CompilerFunctionIAMRole:
     Type: AWS::IAM::Role
