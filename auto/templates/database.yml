@@ -102,6 +102,9 @@ Resources:
               - totalScore
               - language
               - compileErrorMessage
+              - gradingCompleteTime
+              - verdicts
+              - status
         - IndexName: usernameIndex
           KeySchema:
             - AttributeName: username
