@@ -127,6 +127,26 @@ Resources:
               - verdicts
               - status
 
+  # Table to ensure no race conditions in submission delay bypass
+  SubmissionLocksTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${JudgeName}-submission-locks
+      AttributeDefinitions:
+        - AttributeName: username
+          AttributeType: S
+        - AttributeName: problemName
+          AttributeType: S
+      KeySchema:
+        - AttributeName: username
+          KeyType: HASH
+        - AttributeName: problemName
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+      TimeToLiveSpecification:
+        AttributeName: nextAllowedTime
+        Enabled: true
+
   UsersTable:
     Type: AWS::DynamoDB::Table
     Properties:
