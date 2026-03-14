@@ -171,7 +171,7 @@ Resources:
           AttributeType: S
       KeySchema:
         - AttributeName: connectionId
-          KeyType: RANGE
+          KeyType: HASH
       BillingMode: PAY_PER_REQUEST
       GlobalSecondaryIndexes:
         # For notifying admins of new clarifications
