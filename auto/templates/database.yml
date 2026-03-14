@@ -161,6 +161,8 @@ Resources:
     Properties:
       TableName: !Sub ${JudgeName}-websocket
       AttributeDefinitions:
+        - AttributeName: contestId
+          AttributeType: S
         - AttributeName: connectionId
           AttributeType: S
         - AttributeName: accountRole
@@ -169,12 +171,22 @@ Resources:
           AttributeType: S
       KeySchema:
         - AttributeName: connectionId
-          KeyType: HASH
+          KeyType: RANGE
       BillingMode: PAY_PER_REQUEST
       GlobalSecondaryIndexes:
+        # For notifying admins of new clarifications
         - IndexName: accountRoleUsernameIndex
           KeySchema:
             - AttributeName: accountRole
+              KeyType: HASH
+            - AttributeName: username
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        # Notifying users of end contest
+        - IndexName: contestIdUsernameIndex
+          KeySchema:
+            - AttributeName: contestId
               KeyType: HASH
             - AttributeName: username
               KeyType: RANGE
