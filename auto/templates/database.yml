@@ -77,6 +77,8 @@ Resources:
       AttributeDefinitions:
         - AttributeName: subId
           AttributeType: N
+        - AttributeName: contestId
+          AttributeType: S
         - AttributeName: problemName
           AttributeType: S
         - AttributeName: username
@@ -93,18 +95,7 @@ Resources:
             - AttributeName: subId
               KeyType: RANGE
           Projection:
-            ProjectionType: INCLUDE
-            NonKeyAttributes:
-              - submissionTime
-              - maxTime
-              - maxMemory
-              - username
-              - totalScore
-              - language
-              - compileErrorMessage
-              - gradingCompleteTime
-              - verdicts
-              - status
+            ProjectionType: ALL
         - IndexName: usernameIndex
           KeySchema:
             - AttributeName: username
@@ -112,20 +103,15 @@ Resources:
             - AttributeName: subId
               KeyType: RANGE
           Projection:
-            ProjectionType: INCLUDE
-            NonKeyAttributes:
-              - submissionTime
-              - maxTime
-              - maxMemory
-              - problemName
-              - totalScore
-              - language
-              - compileErrorMessage
-              - score
-              - subtaskScores
-              - gradingCompleteTime
-              - verdicts
-              - status
+            ProjectionType: ALL
+        - IndexName: contestIndex
+          KeySchema:
+            - AttributeName: contestId
+              KeyType: HASH
+            - AttributeName: subId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
 
   # Table to ensure no race conditions in submission delay bypass
   SubmissionLocksTable:
